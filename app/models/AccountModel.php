@@ -26,7 +26,7 @@ public function getAccountByUsername($username) {
     $fullName = htmlspecialchars(strip_tags($fullName));
 
 
-//abc update
+//abc update bao tram ne
 
     $password = password_hash($password, PASSWORD_BCRYPT);
     $role = htmlspecialchars(strip_tags($role));
