@@ -11,6 +11,8 @@ public function getAccountByUsername($username) {
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(":username", $username);
     $stmt->execute();
+
+    
     return $stmt->fetch(PDO::FETCH_OBJ);
     }
     public function save($username, $fullName, $password, $role = 'user') {
