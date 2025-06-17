@@ -12,7 +12,7 @@ public function getAccountByUsername($username) {
     $stmt->bindParam(":username", $username);
     $stmt->execute();
 
-    
+
     return $stmt->fetch(PDO::FETCH_OBJ);
     }
     public function save($username, $fullName, $password, $role = 'user') {
@@ -24,6 +24,10 @@ public function getAccountByUsername($username) {
     $stmt = $this->conn->prepare($query);
     $username = htmlspecialchars(strip_tags($username));
     $fullName = htmlspecialchars(strip_tags($fullName));
+
+
+//abc update
+
     $password = password_hash($password, PASSWORD_BCRYPT);
     $role = htmlspecialchars(strip_tags($role));
     $stmt->bindParam(":username", $username);
