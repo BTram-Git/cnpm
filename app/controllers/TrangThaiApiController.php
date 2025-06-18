@@ -1,6 +1,5 @@
 <?php
 require_once('app/config/database.php');
-require_once('app/models/ProductModel.php');
 require_once('app/models/TrangThaiModel.php');
 
 class TrangThaiApiController
@@ -36,7 +35,7 @@ class TrangThaiApiController
         }
     }
 
-    // Thêm sản phẩm mới
+    // Thêm trạng thái mới
     public function store()
     {
         header('Content-Type: application/json');
@@ -48,39 +47,26 @@ class TrangThaiApiController
             return;
         }
 
-        $name = $data['name'] ?? '';
-        $description = $data['description'] ?? '';
-        $price = $data['price'] ?? '';
-        $category_id = $data['category_id'] ?? null;
+        $Tentrangthai = $data['Tentrangthai'] ?? '';
 
-        // Kiểm tra dữ liệu cơ bản
-        if (!is_string($name) || !is_string($description) || !is_numeric($price) || !is_numeric($category_id)) {
+        if (empty($Tentrangthai)) {
             http_response_code(400);
-            echo json_encode(['error' => 'Dữ liệu đầu vào không hợp lệ']);
+            echo json_encode(['error' => 'Vui lòng nhập tên trạng thái']);
             return;
         }
 
-        $result = $this->productModel->addProduct(
-            $name,
-            $description,
-            $price,
-            $category_id,
-            ""
-        );
+        $result = $this->trangThaiModel->addTrangThai($Tentrangthai);
 
-        if (is_array($result)) {
-            http_response_code(400);
-            echo json_encode(['errors' => $result]);
-        } elseif ($result === true) {
+        if ($result === true) {
             http_response_code(201);
-            echo json_encode(['message' => 'Product created successfully']);
+            echo json_encode(['message' => 'Thêm trạng thái thành công']);
         } else {
-            http_response_code(500);
-            echo json_encode(['error' => $result['error'] ?? 'Thêm sản phẩm thất bại']);
+            http_response_code(400);
+            echo json_encode(['error' => 'Thêm trạng thái thất bại']);
         }
     }
 
-    // Cập nhật sản phẩm theo ID
+    // Cập nhật trạng thái theo ID
     public function update($id)
     {
         header('Content-Type: application/json');
@@ -92,31 +78,21 @@ class TrangThaiApiController
             return;
         }
 
-        $name = $data['name'] ?? '';
-        $description = $data['description'] ?? '';
-        $price = $data['price'] ?? '';
-        $category_id = $data['category_id'] ?? null;
+        $Tentrangthai = $data['Tentrangthai'] ?? '';
 
-        if (!is_string($name) || !is_string($description) || !is_numeric($price) || !is_numeric($category_id)) {
+        if (empty($Tentrangthai)) {
             http_response_code(400);
-            echo json_encode(['error' => 'Dữ liệu đầu vào không hợp lệ']);
+            echo json_encode(['error' => 'Vui lòng nhập tên trạng thái']);
             return;
         }
 
-        $result = $this->productModel->updateProduct(
-            $id,
-            $name,
-            $description,
-            $price,
-            $category_id,
-        ""
-        );
+        $result = $this->trangThaiModel->updateTrangThai($id, $Tentrangthai);
 
-        if ($result) {
-            echo json_encode(['message' => 'Product updated successfully']);
+        if ($result === true) {
+            echo json_encode(['message' => 'Cập nhật trạng thái thành công']);
         } else {
             http_response_code(400);
-            echo json_encode(['message' => 'Product update failed']);
+            echo json_encode(['error' => 'Cập nhật trạng thái thất bại']);
         }
     }
 
@@ -130,12 +106,12 @@ class TrangThaiApiController
             return;
         }
 
-        $result = $this->productModel->deleteProduct($id);
+        $result = $this->trangThaiModel->deleteTrangThai($id);
         if ($result) {
-            echo json_encode(['message' => 'Product deleted successfully']);
+            echo json_encode(['message' => 'Xóa trạng thái thành công']);
         } else {
             http_response_code(400);
-            echo json_encode(['message' => 'Product deletion failed']);
+            echo json_encode(['message' => 'Xóa trạng thái thất bại']);
         }
     }
 }

@@ -123,31 +123,13 @@ public function updateUser($id, $hoten, $sdt, $diachi, $email, $ngaysinh, $gioit
 
 public function deleteUser($id) 
 {
-    try {
-        // Kiểm tra người dùng tồn tại
-        $checkQuery = "SELECT COUNT(*) as count FROM " . $this->table_name . " WHERE Manguoidung = :id";
-        $checkStmt = $this->conn->prepare($checkQuery);
-        $checkStmt->bindParam(':id', $id);
-        $checkStmt->execute();
-        $result = $checkStmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($result['count'] == 0) {
-            return ['error' => 'Người dùng không tồn tại'];
-        }
-
-        // Xóa người dùng
-        $query = "DELETE FROM " . $this->table_name . " WHERE Manguoidung = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $id);
-        
-        if ($stmt->execute()) {
-            return true;
-        } else {
-            return ['error' => 'Không thể xóa người dùng'];
-        }
-    } catch (PDOException $e) {
-        return ['error' => 'Lỗi: ' . $e->getMessage()];
+    $query = "DELETE FROM " . $this->table_name . " WHERE Manguoidung = :id";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':id', $id);
+    if ($stmt->execute()) {
+        return true;
     }
+    return false;
 }
 
 } 

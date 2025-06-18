@@ -1,6 +1,6 @@
 <?php
 require_once('app/config/database.php');
-require_once('app/models/ProductModel.php');
+
 require_once('app/models/DichVuModel.php');
 
 class DichVuApiController
@@ -47,25 +47,22 @@ class DichVuApiController
             echo json_encode(['error' => 'Dữ liệu không hợp lệ']);
             return;
         }
-
-        $name = $data['name'] ?? '';
-        $description = $data['description'] ?? '';
-        $price = $data['price'] ?? '';
-        $category_id = $data['category_id'] ?? null;
-
+        //$now = new DateTime();
+        $Tendichvu = $data['Tendichvu'] ?? '';
+        $Gia = $data['Gia'];
+        $MoTa = $data['MoTa'] ?? '';
+    
         // Kiểm tra dữ liệu cơ bản
-        if (!is_string($name) || !is_string($description) || !is_numeric($price) || !is_numeric($category_id)) {
+        if (!is_string($Tendichvu) || !is_string($MoTa) ) {
             http_response_code(400);
             echo json_encode(['error' => 'Dữ liệu đầu vào không hợp lệ']);
             return;
         }
 
-        $result = $this->productModel->addProduct(
-            $name,
-            $description,
-            $price,
-            $category_id,
-            ""
+        $result = $this->dichVuModel->addDichVu(
+            $Tendichvu,
+            $Gia,
+            $MoTa
         );
 
         if (is_array($result)) {
@@ -73,10 +70,10 @@ class DichVuApiController
             echo json_encode(['errors' => $result]);
         } elseif ($result === true) {
             http_response_code(201);
-            echo json_encode(['message' => 'Product created successfully']);
+            echo json_encode(['message' => 'Dich vu created successfully']);
         } else {
             http_response_code(500);
-            echo json_encode(['error' => $result['error'] ?? 'Thêm sản phẩm thất bại']);
+            echo json_encode(['error' => $result['error'] ?? 'Thêm Dich vu thất bại']);
         }
     }
 
@@ -92,24 +89,22 @@ class DichVuApiController
             return;
         }
 
-        $name = $data['name'] ?? '';
-        $description = $data['description'] ?? '';
-        $price = $data['price'] ?? '';
-        $category_id = $data['category_id'] ?? null;
+        $Tendichvu = $data['Tendichvu'] ?? '';
+        $Gia = $data['Gia'];
+        $MoTa = $data['MoTa'] ?? '';
 
-        if (!is_string($name) || !is_string($description) || !is_numeric($price) || !is_numeric($category_id)) {
+        if (!is_string($Tendichvu) || !is_string($MoTa) ) {
             http_response_code(400);
             echo json_encode(['error' => 'Dữ liệu đầu vào không hợp lệ']);
             return;
         }
 
-        $result = $this->productModel->updateProduct(
+
+        $result = $this->dichVuModel->updateDichVu(
             $id,
-            $name,
-            $description,
-            $price,
-            $category_id,
-        ""
+            $Tendichvu,
+            $Gia,
+            $MoTa
         );
 
         if ($result) {
@@ -119,7 +114,6 @@ class DichVuApiController
             echo json_encode(['message' => 'Product update failed']);
         }
     }
-
     // Xóa sản phẩm theo ID
     public function destroy($id)
     {
@@ -130,12 +124,12 @@ class DichVuApiController
             return;
         }
 
-        $result = $this->productModel->deleteProduct($id);
+        $result = $this->dichVuModel->deleteDichVu($id);
         if ($result) {
-            echo json_encode(['message' => 'Product deleted successfully']);
+            echo json_encode(['message' => 'Xóa dịch vụ thành công']);
         } else {
             http_response_code(400);
-            echo json_encode(['message' => 'Product deletion failed']);
+            echo json_encode(['message' => 'Xóa dịch vụ thất bại']);
         }
     }
 }

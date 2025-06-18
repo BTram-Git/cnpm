@@ -1,4 +1,4 @@
- <?php 
+<?php 
 class DatLichModel 
 { 
 private $conn; 
@@ -84,6 +84,17 @@ public function updateDatLich($id, $Manguoidung, $Thoigiandatlich,$Trangthai)
         return true;
     }
 
+    return false;
+}
+
+public function deleteDatLich($MaDL)
+{
+    $query = "DELETE FROM " . $this->table_name . " WHERE MaDL = :MaDL";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':MaDL', $MaDL);
+    if ($stmt->execute()) {
+        return true;
+    }
     return false;
 }
 

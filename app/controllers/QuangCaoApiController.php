@@ -1,6 +1,5 @@
 <?php
 require_once('app/config/database.php');
-require_once('app/models/ProductModel.php');
 require_once('app/models/QuangCaoModel.php');
 
 class QuangCaoApiController
@@ -36,7 +35,7 @@ class QuangCaoApiController
         }
     }
 
-    // Thêm sản phẩm mới
+    // Thêm quảng cáo mới
     public function store()
     {
         header('Content-Type: application/json');
@@ -48,39 +47,32 @@ class QuangCaoApiController
             return;
         }
 
-        $name = $data['name'] ?? '';
-        $description = $data['description'] ?? '';
-        $price = $data['price'] ?? '';
-        $category_id = $data['category_id'] ?? null;
+        $Tieude = $data['Tieude'] ?? '';
+        $Noidung = $data['Noidung'] ?? '';
+        $Loaiquangcao = $data['Loaiquangcao'] ?? '';
+        $Image = $data['Image'] ?? '';
+        $Ngaybatdau = $data['Ngaybatdau'] ?? '';
+        $Ngayketthuc = $data['Ngayketthuc'] ?? '';
+        $Manguoidung = $data['Manguoidung'] ?? '';
 
-        // Kiểm tra dữ liệu cơ bản
-        if (!is_string($name) || !is_string($description) || !is_numeric($price) || !is_numeric($category_id)) {
+        if (empty($Tieude) || empty($Noidung) || empty($Loaiquangcao) || empty($Image) || empty($Ngaybatdau) || empty($Ngayketthuc) || empty($Manguoidung)) {
             http_response_code(400);
-            echo json_encode(['error' => 'Dữ liệu đầu vào không hợp lệ']);
+            echo json_encode(['error' => 'Vui lòng nhập đầy đủ thông tin']);
             return;
         }
 
-        $result = $this->productModel->addProduct(
-            $name,
-            $description,
-            $price,
-            $category_id,
-            ""
-        );
+        $result = $this->quangCaoModel->addQuangCao($Tieude, $Noidung, $Loaiquangcao, $Image, $Ngaybatdau, $Ngayketthuc, $Manguoidung);
 
-        if (is_array($result)) {
-            http_response_code(400);
-            echo json_encode(['errors' => $result]);
-        } elseif ($result === true) {
+        if ($result === true) {
             http_response_code(201);
-            echo json_encode(['message' => 'Product created successfully']);
+            echo json_encode(['message' => 'Thêm quảng cáo thành công']);
         } else {
-            http_response_code(500);
-            echo json_encode(['error' => $result['error'] ?? 'Thêm sản phẩm thất bại']);
+            http_response_code(400);
+            echo json_encode(['error' => 'Thêm quảng cáo thất bại']);
         }
     }
 
-    // Cập nhật sản phẩm theo ID
+    // Cập nhật quảng cáo theo ID
     public function update($id)
     {
         header('Content-Type: application/json');
@@ -92,31 +84,27 @@ class QuangCaoApiController
             return;
         }
 
-        $name = $data['name'] ?? '';
-        $description = $data['description'] ?? '';
-        $price = $data['price'] ?? '';
-        $category_id = $data['category_id'] ?? null;
+        $Tieude = $data['Tieude'] ?? '';
+        $Noidung = $data['Noidung'] ?? '';
+        $Loaiquangcao = $data['Loaiquangcao'] ?? '';
+        $Image = $data['Image'] ?? '';
+        $Ngaybatdau = $data['Ngaybatdau'] ?? '';
+        $Ngayketthuc = $data['Ngayketthuc'] ?? '';
+        $Manguoidung = $data['Manguoidung'] ?? '';
 
-        if (!is_string($name) || !is_string($description) || !is_numeric($price) || !is_numeric($category_id)) {
+        if (empty($Tieude) || empty($Noidung) || empty($Loaiquangcao) || empty($Image) || empty($Ngaybatdau) || empty($Ngayketthuc) || empty($Manguoidung)) {
             http_response_code(400);
-            echo json_encode(['error' => 'Dữ liệu đầu vào không hợp lệ']);
+            echo json_encode(['error' => 'Vui lòng nhập đầy đủ thông tin']);
             return;
         }
 
-        $result = $this->productModel->updateProduct(
-            $id,
-            $name,
-            $description,
-            $price,
-            $category_id,
-        ""
-        );
+        $result = $this->quangCaoModel->updateQuangCao($id, $Tieude, $Noidung, $Loaiquangcao, $Image, $Ngaybatdau, $Ngayketthuc, $Manguoidung);
 
-        if ($result) {
-            echo json_encode(['message' => 'Product updated successfully']);
+        if ($result === true) {
+            echo json_encode(['message' => 'Cập nhật quảng cáo thành công']);
         } else {
             http_response_code(400);
-            echo json_encode(['message' => 'Product update failed']);
+            echo json_encode(['error' => 'Cập nhật quảng cáo thất bại']);
         }
     }
 
@@ -130,12 +118,12 @@ class QuangCaoApiController
             return;
         }
 
-        $result = $this->productModel->deleteProduct($id);
+        $result = $this->quangCaoModel->deleteQuangCao($id);
         if ($result) {
-            echo json_encode(['message' => 'Product deleted successfully']);
+            echo json_encode(['message' => 'Xóa quảng cáo thành công']);
         } else {
             http_response_code(400);
-            echo json_encode(['message' => 'Product deletion failed']);
+            echo json_encode(['message' => 'Xóa quảng cáo thất bại']);
         }
     }
 }

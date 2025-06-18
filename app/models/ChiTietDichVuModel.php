@@ -25,4 +25,44 @@ $stmt->execute();
 $result = $stmt->fetch(PDO::FETCH_OBJ); 
 return $result; 
 }
+
+public function addChiTietDichVu($MaDL, $MaDV)
+{
+    $query = "INSERT INTO " . $this->table_name . " (MaDL, MaDV) VALUES (:MaDL, :MaDV)";
+    $stmt = $this->conn->prepare($query);
+    $MaDL = htmlspecialchars(strip_tags($MaDL));
+    $MaDV = htmlspecialchars(strip_tags($MaDV));
+    $stmt->bindParam(':MaDL', $MaDL);
+    $stmt->bindParam(':MaDV', $MaDV);
+    if ($stmt->execute()) {
+        return true;
+    }
+    return false;
+}
+
+public function updateChiTietDichVu($MaDL, $MaDV)
+{
+    $query = "UPDATE " . $this->table_name . " SET MaDV = :MaDV WHERE MaDL = :MaDL";
+    $stmt = $this->conn->prepare($query);
+    $MaDL = htmlspecialchars(strip_tags($MaDL));
+    $MaDV = htmlspecialchars(strip_tags($MaDV));
+    $stmt->bindParam(':MaDL', $MaDL);
+    $stmt->bindParam(':MaDV', $MaDV);
+    if ($stmt->execute()) {
+        return true;
+    }
+    return false;
+}
+
+public function deleteChiTietDichVu($MaDL, $MaDV)
+{
+    $query = "DELETE FROM " . $this->table_name . " WHERE MaDL = :MaDL AND MaDV = :MaDV";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':MaDL', $MaDL);
+    $stmt->bindParam(':MaDV', $MaDV);
+    if ($stmt->execute()) {
+        return true;
+    }
+    return false;
+}
 }

@@ -37,7 +37,7 @@ class UserApiController
     }
 
     // Thêm người dùng mới
-    public function addUser()
+    public function store()
     {
         header('Content-Type: application/json');
         $data = json_decode(file_get_contents("php://input"), true);
@@ -104,7 +104,7 @@ class UserApiController
     }
 
     // Cập nhật thông tin người dùng
-    public function updateUser($id)
+    public function update($id)
     {
         header('Content-Type: application/json');
         $data = json_decode(file_get_contents("php://input"), true);

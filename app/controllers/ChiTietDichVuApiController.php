@@ -1,6 +1,6 @@
 <?php
 require_once('app/config/database.php');
-require_once('app/models/ProductModel.php');
+
 require_once('app/models/ChiTietDichVuModel.php');
 
 class ChiTietDichVuApiController
@@ -36,7 +36,7 @@ class ChiTietDichVuApiController
         }
     }
 
-    // Thêm sản phẩm mới
+    // Thêm chi tiết dịch vụ mới
     public function store()
     {
         header('Content-Type: application/json');
@@ -48,75 +48,53 @@ class ChiTietDichVuApiController
             return;
         }
 
-        $name = $data['name'] ?? '';
-        $description = $data['description'] ?? '';
-        $price = $data['price'] ?? '';
-        $category_id = $data['category_id'] ?? null;
+        $MaDL = $data['MaDL'] ?? '';
+        $MaDV = $data['MaDV'] ?? '';
 
-        // Kiểm tra dữ liệu cơ bản
-        if (!is_string($name) || !is_string($description) || !is_numeric($price) || !is_numeric($category_id)) {
+        if (empty($MaDL) || empty($MaDV)) {
             http_response_code(400);
-            echo json_encode(['error' => 'Dữ liệu đầu vào không hợp lệ']);
+            echo json_encode(['error' => 'Vui lòng nhập đầy đủ thông tin']);
             return;
         }
 
-        $result = $this->productModel->addProduct(
-            $name,
-            $description,
-            $price,
-            $category_id,
-            ""
-        );
+        $result = $this->chiTietDichVuModel->addChiTietDichVu($MaDL, $MaDV);
 
-        if (is_array($result)) {
-            http_response_code(400);
-            echo json_encode(['errors' => $result]);
-        } elseif ($result === true) {
+        if ($result === true) {
             http_response_code(201);
-            echo json_encode(['message' => 'Product created successfully']);
+            echo json_encode(['message' => 'Thêm chi tiết dịch vụ thành công']);
         } else {
-            http_response_code(500);
-            echo json_encode(['error' => $result['error'] ?? 'Thêm sản phẩm thất bại']);
+            http_response_code(400);
+            echo json_encode(['error' => 'Thêm chi tiết dịch vụ thất bại']);
         }
     }
 
-    // Cập nhật sản phẩm theo ID
+    // Cập nhật chi tiết dịch vụ theo MaDL
     public function update($id)
     {
         header('Content-Type: application/json');
         $data = json_decode(file_get_contents("php://input"), true);
 
-        if (!is_array($data) || !is_numeric($id)) {
+        if (!is_array($data) || empty($id)) {
             http_response_code(400);
             echo json_encode(['error' => 'Dữ liệu hoặc ID không hợp lệ']);
             return;
         }
 
-        $name = $data['name'] ?? '';
-        $description = $data['description'] ?? '';
-        $price = $data['price'] ?? '';
-        $category_id = $data['category_id'] ?? null;
+        $MaDV = $data['MaDV'] ?? '';
 
-        if (!is_string($name) || !is_string($description) || !is_numeric($price) || !is_numeric($category_id)) {
+        if (empty($MaDV)) {
             http_response_code(400);
-            echo json_encode(['error' => 'Dữ liệu đầu vào không hợp lệ']);
+            echo json_encode(['error' => 'Vui lòng nhập đầy đủ thông tin']);
             return;
         }
 
-        $result = $this->productModel->updateProduct(
-            $id,
-            $name,
-            $description,
-            $price,
-            $category_id,
-        ""
-        );
+        $result = $this->chiTietDichVuModel->updateChiTietDichVu($id, $MaDV);
 
-        if ($result) {
-            echo json_encode(['message' => 'Product updated successfully']);
+        if ($result === true) {
+            echo json_encode(['message' => 'Cập nhật chi tiết dịch vụ thành công']);
         } else {
             http_response_code(400);
-            echo json_encode(['message' => 'Product update failed']);
+            echo json_encode(['error' => 'Cập nhật chi tiết dịch vụ thất bại']);
         }
     }
 
@@ -124,18 +102,19 @@ class ChiTietDichVuApiController
     public function destroy($id)
     {
         header('Content-Type: application/json');
-        if (!is_numeric($id)) {
+        $data = json_decode(file_get_contents("php://input"), true);
+        $MaDV = $data['MaDV'] ?? null;
+        if (empty($id) || empty($MaDV)) {
             http_response_code(400);
-            echo json_encode(['error' => 'ID không hợp lệ']);
+            echo json_encode(['error' => 'Thiếu MaDL hoặc MaDV']);
             return;
         }
-
-        $result = $this->productModel->deleteProduct($id);
+        $result = $this->chiTietDichVuModel->deleteChiTietDichVu($id, $MaDV);
         if ($result) {
-            echo json_encode(['message' => 'Product deleted successfully']);
+            echo json_encode(['message' => 'Xóa chi tiết dịch vụ thành công']);
         } else {
             http_response_code(400);
-            echo json_encode(['message' => 'Product deletion failed']);
+            echo json_encode(['message' => 'Xóa chi tiết dịch vụ thất bại']);
         }
     }
 }

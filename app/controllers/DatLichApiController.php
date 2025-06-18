@@ -125,12 +125,12 @@ class DatLichApiController
             return;
         }
 
-        $result = $this->productModel->deleteProduct($id);
+        $result = $this->datLichModel->deleteDatLich($id);
         if ($result) {
-            echo json_encode(['message' => 'Product deleted successfully']);
+            echo json_encode(['message' => 'Xóa đặt lịch thành công']);
         } else {
             http_response_code(400);
-            echo json_encode(['message' => 'Product deletion failed']);
+            echo json_encode(['message' => 'Xóa đặt lịch thất bại']);
         }
     }
 }

@@ -5,7 +5,7 @@ require_once 'app/config/database.php';
 require_once 'app/helpers/SessionHelper.php';
 
 // Require các Controller API
-require_once 'app/controllers/AccountApiController.php';
+
 
 // Require các Controller thường (giao diện nếu có)
 

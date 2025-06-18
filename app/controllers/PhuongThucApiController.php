@@ -1,6 +1,6 @@
 <?php
 require_once('app/config/database.php');
-require_once('app/models/ProductModel.php');
+
 require_once('app/models/PhuongThucModel.php');
 
 class PhuongThucApiController
@@ -36,7 +36,7 @@ class PhuongThucApiController
         }
     }
 
-    // Thêm sản phẩm mới
+    // Thêm phương thức mới
     public function store()
     {
         header('Content-Type: application/json');
@@ -48,39 +48,27 @@ class PhuongThucApiController
             return;
         }
 
-        $name = $data['name'] ?? '';
-        $description = $data['description'] ?? '';
-        $price = $data['price'] ?? '';
-        $category_id = $data['category_id'] ?? null;
+        $TenPT = $data['TenPT'] ?? '';
+        $Mota = $data['Mota'] ?? '';
 
-        // Kiểm tra dữ liệu cơ bản
-        if (!is_string($name) || !is_string($description) || !is_numeric($price) || !is_numeric($category_id)) {
+        if (empty($TenPT) || empty($Mota)) {
             http_response_code(400);
-            echo json_encode(['error' => 'Dữ liệu đầu vào không hợp lệ']);
+            echo json_encode(['error' => 'Vui lòng nhập đầy đủ thông tin']);
             return;
         }
 
-        $result = $this->productModel->addProduct(
-            $name,
-            $description,
-            $price,
-            $category_id,
-            ""
-        );
+        $result = $this->phuongThucModel->addPhuongThuc($TenPT, $Mota);
 
-        if (is_array($result)) {
-            http_response_code(400);
-            echo json_encode(['errors' => $result]);
-        } elseif ($result === true) {
+        if ($result === true) {
             http_response_code(201);
-            echo json_encode(['message' => 'Product created successfully']);
+            echo json_encode(['message' => 'Thêm phương thức thành công']);
         } else {
-            http_response_code(500);
-            echo json_encode(['error' => $result['error'] ?? 'Thêm sản phẩm thất bại']);
+            http_response_code(400);
+            echo json_encode(['error' => 'Thêm phương thức thất bại']);
         }
     }
 
-    // Cập nhật sản phẩm theo ID
+    // Cập nhật phương thức theo ID
     public function update($id)
     {
         header('Content-Type: application/json');
@@ -92,31 +80,22 @@ class PhuongThucApiController
             return;
         }
 
-        $name = $data['name'] ?? '';
-        $description = $data['description'] ?? '';
-        $price = $data['price'] ?? '';
-        $category_id = $data['category_id'] ?? null;
+        $TenPT = $data['TenPT'] ?? '';
+        $Mota = $data['Mota'] ?? '';
 
-        if (!is_string($name) || !is_string($description) || !is_numeric($price) || !is_numeric($category_id)) {
+        if (empty($TenPT) || empty($Mota)) {
             http_response_code(400);
-            echo json_encode(['error' => 'Dữ liệu đầu vào không hợp lệ']);
+            echo json_encode(['error' => 'Vui lòng nhập đầy đủ thông tin']);
             return;
         }
 
-        $result = $this->productModel->updateProduct(
-            $id,
-            $name,
-            $description,
-            $price,
-            $category_id,
-        ""
-        );
+        $result = $this->phuongThucModel->updatePhuongThuc($id, $TenPT, $Mota);
 
-        if ($result) {
-            echo json_encode(['message' => 'Product updated successfully']);
+        if ($result === true) {
+            echo json_encode(['message' => 'Cập nhật phương thức thành công']);
         } else {
             http_response_code(400);
-            echo json_encode(['message' => 'Product update failed']);
+            echo json_encode(['error' => 'Cập nhật phương thức thất bại']);
         }
     }
 
@@ -130,12 +109,12 @@ class PhuongThucApiController
             return;
         }
 
-        $result = $this->productModel->deleteProduct($id);
+        $result = $this->phuongThucModel->deletePhuongThuc($id);
         if ($result) {
-            echo json_encode(['message' => 'Product deleted successfully']);
+            echo json_encode(['message' => 'Xóa phương thức thành công']);
         } else {
             http_response_code(400);
-            echo json_encode(['message' => 'Product deletion failed']);
+            echo json_encode(['message' => 'Xóa phương thức thất bại']);
         }
     }
 }
