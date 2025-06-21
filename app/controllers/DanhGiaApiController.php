@@ -2,6 +2,7 @@
 require_once('app/config/database.php');
 
 require_once('app/models/DanhGiaModel.php');
+require_once('app/helpers/SessionHelper.php');
 
 class DanhGiaApiController
 {
@@ -39,6 +40,13 @@ class DanhGiaApiController
     // Thêm mới
    public function store()
    {
+       SessionHelper::start();
+       if (!SessionHelper::isLoggedIn()) {
+           http_response_code(401);
+           echo json_encode(['error' => 'Vui lòng đăng nhập để đánh giá.']);
+           return;
+       }
+
        header('Content-Type: application/json');
        $data = json_decode(file_get_contents("php://input"), true);
 
@@ -47,43 +55,52 @@ class DanhGiaApiController
            echo json_encode(['error' => 'Dữ liệu không hợp lệ']);
            return;
        }
-       //$now = new DateTime();
+       
        $Danhgiasao = $data['Danhgiasao'] ?? '';
-       $Nhanxet = $data['Nhanxet'];
-       $Ngaydanhgia = $data['Ngaydanhgia'] ?? '';
-       $Manguoidung = $data['Manguoidung'];
+       $Nhanxet = $data['Nhanxet'] ?? '';
+       $Ngaydanhgia = date('Y-m-d H:i:s');
+       $Manguoidung = SessionHelper::getUserId(); // Lấy từ session
        $MaHD = $data['MaHD'] ?? '';
-       // Kiểm tra dữ liệu cơ bản
-       if (!is_string($Danhgiasao) || !is_string($Nhanxet) || !is_string($Manguoidung) || !is_string($MaHD) ) {
-           http_response_code(400);
-           echo json_encode(['error' => 'Dữ liệu đầu vào không hợp lệ']);
-           return;
-       }
-
+       
+       // Sẽ tốt hơn nếu có kiểm tra xem người dùng này có thực sự sở hữu hóa đơn MaHD không
+       
        $result = $this->danhGiaModel->addDanhGia(
-        $Danhgiasao,
-        $Nhanxet,
-        $Ngaydanhgia,
-        $Manguoidung,
-        $MaHD
+           $Danhgiasao,
+           $Nhanxet,
+           $Ngaydanhgia,
+           $Manguoidung,
+           $MaHD
        );
 
-       if (is_array($result)) {
-           http_response_code(400);
-           echo json_encode(['errors' => $result]);
-       } elseif ($result === true) {
+       if ($result === true) {
            http_response_code(201);
            echo json_encode(['message' => 'Đánh giá được thêm thành công']);
        } else {
-           http_response_code(500);
-           echo json_encode(['error' => $result['error'] ?? 'Thêm đánh giá thất bại']);
+           http_response_code(400);
+           echo json_encode(['errors' => $result]);
        }
    }
 
    // Cập nhật sản phẩm theo ID
    public function update($id)
    {
+       SessionHelper::start();
        header('Content-Type: application/json');
+
+       $danhGia = $this->danhGiaModel->getDanhGiaById($id);
+
+       if (!$danhGia) {
+           http_response_code(404);
+           echo json_encode(['message' => 'Đánh giá không tìm thấy']);
+           return;
+       }
+
+       if (!SessionHelper::isAdmin() && !(SessionHelper::isLoggedIn() && SessionHelper::getUserId() == $danhGia->Manguoidung)) {
+           http_response_code(403);
+           echo json_encode(['error' => 'Bạn không có quyền sửa đánh giá này.']);
+           return;
+       }
+       
        $data = json_decode(file_get_contents("php://input"), true);
 
        if (!is_array($data) || !is_numeric($id)) {
@@ -93,25 +110,18 @@ class DanhGiaApiController
        }
 
        $Danhgiasao = $data['Danhgiasao'] ?? '';
-       $Nhanxet = $data['Nhanxet'];
-       $Ngaydanhgia = $data['Ngaydanhgia'] ?? '';
-       $Manguoidung = $data['Manguoidung'];
-       $MaHD = $data['MaHD'] ?? '';
+       $Nhanxet = $data['Nhanxet'] ?? '';
 
-       if (!is_string($Danhgiasao) || !is_string($Nhanxet) || !is_string($Manguoidung) || !is_string($MaHD) ) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Dữ liệu đầu vào không hợp lệ']);
-        return;
+       if (empty($Danhgiasao) || empty($Nhanxet)) {
+           http_response_code(400);
+           echo json_encode(['error' => 'Vui lòng điền đủ thông tin sao và nhận xét.']);
+           return;
        }
 
-
        $result = $this->danhGiaModel->updateDanhGia(
-        $id,
-        $Danhgiasao,
-        $Nhanxet,
-        $Ngaydanhgia,
-        $Manguoidung,
-        $MaHD
+           $id,
+           $Danhgiasao,
+           $Nhanxet
        );
 
        if ($result) {
@@ -125,7 +135,23 @@ class DanhGiaApiController
     // Xóa sản phẩm theo ID
     public function destroy($id)
     {
+        SessionHelper::start();
         header('Content-Type: application/json');
+        
+        $danhGia = $this->danhGiaModel->getDanhGiaById($id);
+
+        if (!$danhGia) {
+            http_response_code(404);
+            echo json_encode(['message' => 'Đánh giá không tìm thấy']);
+            return;
+        }
+
+        if (!SessionHelper::isAdmin() && !(SessionHelper::isLoggedIn() && SessionHelper::getUserId() == $danhGia->Manguoidung)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Bạn không có quyền xóa đánh giá này.']);
+            return;
+        }
+
         if (!is_numeric($id)) {
             http_response_code(400);
             echo json_encode(['error' => 'ID không hợp lệ']);

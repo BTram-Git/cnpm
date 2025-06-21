@@ -26,7 +26,7 @@ $result = $stmt->fetch(PDO::FETCH_OBJ);
 return $result; 
 }
 
-public function addUser($hoten, $sdt, $diachi, $email, $ngaysinh, $gioitinh) 
+public function registerUser($hoten, $sdt, $diachi, $email, $ngaysinh, $gioitinh, $matkhau) 
 {
     try {
         // Kiểm tra email đã tồn tại chưa
@@ -40,9 +40,12 @@ public function addUser($hoten, $sdt, $diachi, $email, $ngaysinh, $gioitinh)
             return ['error' => 'Email đã tồn tại'];
         }
 
+        // Băm mật khẩu
+        $hashed_password = password_hash($matkhau, PASSWORD_DEFAULT);
+
         // Thêm người dùng mới
-        $query = "INSERT INTO " . $this->table_name . " (Hoten, SDT, DiaChi, Email, Ngaysinh, Gioitinh) 
-                 VALUES (:hoten, :sdt, :diachi, :email, :ngaysinh, :gioitinh)";
+        $query = "INSERT INTO " . $this->table_name . " (Hoten, SDT, DiaChi, Email, Ngaysinh, Gioitinh, Matkhau, Vaitro) 
+                 VALUES (:hoten, :sdt, :diachi, :email, :ngaysinh, :gioitinh, :matkhau, 'user')";
         
         $stmt = $this->conn->prepare($query);
         
@@ -53,6 +56,7 @@ public function addUser($hoten, $sdt, $diachi, $email, $ngaysinh, $gioitinh)
         $stmt->bindParam(':email', $email);
         $stmt->bindParam(':ngaysinh', $ngaysinh);
         $stmt->bindParam(':gioitinh', $gioitinh);
+        $stmt->bindParam(':matkhau', $hashed_password);
         
         if ($stmt->execute()) {
             return true;
@@ -64,7 +68,29 @@ public function addUser($hoten, $sdt, $diachi, $email, $ngaysinh, $gioitinh)
     }
 }
 
-public function updateUser($id, $hoten, $sdt, $diachi, $email, $ngaysinh, $gioitinh) 
+public function loginUser($email, $matkhau)
+{
+    try {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE Email = :email";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($user && password_verify($matkhau, $user['Matkhau'])) {
+            // Không trả về mật khẩu
+            unset($user['Matkhau']);
+            return $user;
+        }
+        
+        return false;
+    } catch (PDOException $e) {
+        return ['error' => 'Lỗi: ' . $e->getMessage()];
+    }
+}
+
+public function updateUser($id, $hoten, $sdt, $diachi, $email, $ngaysinh, $gioitinh, $matkhau = null) 
 {
     try {
         // Kiểm tra người dùng tồn tại
@@ -97,8 +123,13 @@ public function updateUser($id, $hoten, $sdt, $diachi, $email, $ngaysinh, $gioit
                      DiaChi = :diachi, 
                      Email = :email, 
                      Ngaysinh = :ngaysinh, 
-                     Gioitinh = :gioitinh 
-                 WHERE Manguoidung = :id";
+                     Gioitinh = :gioitinh";
+
+        if ($matkhau) {
+            $query .= ", Matkhau = :matkhau";
+        }
+        
+        $query .= " WHERE Manguoidung = :id";
         
         $stmt = $this->conn->prepare($query);
         
@@ -110,6 +141,11 @@ public function updateUser($id, $hoten, $sdt, $diachi, $email, $ngaysinh, $gioit
         $stmt->bindParam(':email', $email);
         $stmt->bindParam(':ngaysinh', $ngaysinh);
         $stmt->bindParam(':gioitinh', $gioitinh);
+
+        if ($matkhau) {
+            $hashed_password = password_hash($matkhau, PASSWORD_DEFAULT);
+            $stmt->bindParam(':matkhau', $hashed_password);
+        }
         
         if ($stmt->execute()) {
             return true;

@@ -1,7 +1,7 @@
 <?php
 require_once('app/config/database.php');
-
 require_once('app/models/DichVuModel.php');
+require_once('app/helpers/SessionHelper.php');
 
 class DichVuApiController
 {
@@ -39,6 +39,12 @@ class DichVuApiController
     // Thêm sản phẩm mới
     public function store()
     {
+        SessionHelper::start();
+        if (!SessionHelper::isAdmin()) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Bạn không có quyền thực hiện hành động này.']);
+            return;
+        }
         header('Content-Type: application/json');
         $data = json_decode(file_get_contents("php://input"), true);
 
@@ -80,6 +86,12 @@ class DichVuApiController
     // Cập nhật sản phẩm theo ID
     public function update($id)
     {
+        SessionHelper::start();
+        if (!SessionHelper::isAdmin()) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Bạn không có quyền thực hiện hành động này.']);
+            return;
+        }
         header('Content-Type: application/json');
         $data = json_decode(file_get_contents("php://input"), true);
 
@@ -117,6 +129,12 @@ class DichVuApiController
     // Xóa sản phẩm theo ID
     public function destroy($id)
     {
+        SessionHelper::start();
+        if (!SessionHelper::isAdmin()) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Bạn không có quyền thực hiện hành động này.']);
+            return;
+        }
         header('Content-Type: application/json');
         if (!is_numeric($id)) {
             http_response_code(400);

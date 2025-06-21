@@ -40,7 +40,7 @@ if ($url[0] === 'api' && isset($url[1])) {
                     $action = $specialAction;
                     $id = null;
                 } else {
-                    $action = 'store';
+                    $action = 'register';
                 }
                 break;
             case 'PUT':

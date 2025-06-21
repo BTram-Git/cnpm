@@ -24,6 +24,10 @@ class SessionHelper {
     self::start();
     return isset($_SESSION['role']) && $_SESSION['role'] === $role;
     }
+    public static function getUserId() {
+    self::start();
+    return $_SESSION['user_id'] ?? null;
+    }
     }
     ?>
     

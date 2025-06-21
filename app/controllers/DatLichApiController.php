@@ -1,6 +1,7 @@
 <?php
 require_once('app/config/database.php');
 require_once('app/models/DatLichModel.php');
+require_once('app/helpers/SessionHelper.php');
 
 class DatLichApiController
 {
@@ -16,8 +17,22 @@ class DatLichApiController
     // Lấy danh sách
     public function index()
     {
+        SessionHelper::start();
         header('Content-Type: application/json');
-        $datLichs = $this->datLichModel->getDatLich();
+
+        if (SessionHelper::isAdmin()) {
+            // Admin thấy tất cả
+            $datLichs = $this->datLichModel->getDatLich();
+        } elseif (SessionHelper::isLoggedIn()) {
+            // User thấy của mình
+            $userId = SessionHelper::getUserId();
+            $datLichs = $this->datLichModel->getDatLichByUserId($userId);
+        } else {
+            // Chưa đăng nhập
+            http_response_code(401);
+            echo json_encode(['error' => 'Vui lòng đăng nhập để xem lịch đặt.']);
+            return;
+        }
        
         echo json_encode($datLichs);
     }
@@ -25,11 +40,19 @@ class DatLichApiController
     // Lấy thông tin sản phẩm theo ID
     public function show($id)
     {
+        SessionHelper::start();
         header('Content-Type: application/json');
+        
         $datLich = $this->datLichModel->getDatLichById($id);
         
         if ($datLich) {
-            echo json_encode($datLich);
+            // Kiểm tra quyền
+            if (SessionHelper::isAdmin() || (SessionHelper::isLoggedIn() && SessionHelper::getUserId() == $datLich->Manguoidung)) {
+                echo json_encode($datLich);
+            } else {
+                http_response_code(403);
+                echo json_encode(['error' => 'Bạn không có quyền xem lịch đặt này.']);
+            }
         } else {
             http_response_code(404);
             echo json_encode(['message' => 'Lịch không tìm thấy']);
@@ -39,6 +62,13 @@ class DatLichApiController
     // Thêm sản phẩm mới
     public function store()
     {
+        SessionHelper::start();
+        if (!SessionHelper::isLoggedIn()) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Vui lòng đăng nhập để đặt lịch.']);
+            return;
+        }
+
         header('Content-Type: application/json');
         $data = json_decode(file_get_contents("php://input"), true);
 
@@ -47,40 +77,47 @@ class DatLichApiController
             echo json_encode(['error' => 'Dữ liệu không hợp lệ']);
             return;
         }
-        //$now = new DateTime();
-        $Manguoidung = $data['Manguoidung'] ?? '';
-        $Thoigiandatlich = $data['Thoigiandatlich'];
-        $Trangthai = $data['Trangthai'] ?? '';
-    
-        // Kiểm tra dữ liệu cơ bản
-        if (!is_string($Manguoidung) || !is_string($Trangthai) ) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Dữ liệu đầu vào không hợp lệ']);
-            return;
-        }
 
+        $Manguoidung = SessionHelper::getUserId(); // Lấy ID người dùng từ session
+        $Thoigiandatlich = $data['Thoigiandatlich'] ?? date('Y-m-d H:i:s');
+        $Trangthai = $data['Trangthai'] ?? 'Chờ xác nhận';
+    
         $result = $this->datLichModel->addDatLich(
             $Manguoidung,
             $Thoigiandatlich,
             $Trangthai
         );
 
-        if (is_array($result)) {
-            http_response_code(400);
-            echo json_encode(['errors' => $result]);
-        } elseif ($result === true) {
+        if ($result === true) {
             http_response_code(201);
-            echo json_encode(['message' => 'Dat lich được thêm thành công ']);
+            echo json_encode(['message' => 'Đặt lịch thành công']);
         } else {
-            http_response_code(500);
-            echo json_encode(['error' => $result['error'] ?? 'Thêm Dat lich thất bại']);
+            http_response_code(400);
+            echo json_encode(['error' => $result['error'] ?? 'Đặt lịch thất bại']);
         }
     }
 
     // Cập nhật sản phẩm theo ID
     public function update($id)
     {
+        SessionHelper::start();
         header('Content-Type: application/json');
+
+        $datLich = $this->datLichModel->getDatLichById($id);
+
+        if (!$datLich) {
+            http_response_code(404);
+            echo json_encode(['message' => 'Lịch không tìm thấy']);
+            return;
+        }
+
+        // Kiểm tra quyền
+        if (!SessionHelper::isAdmin() && !(SessionHelper::isLoggedIn() && SessionHelper::getUserId() == $datLich->Manguoidung)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Bạn không có quyền sửa lịch đặt này.']);
+            return;
+        }
+
         $data = json_decode(file_get_contents("php://input"), true);
 
         if (!is_array($data) || !is_numeric($id)) {
@@ -89,20 +126,15 @@ class DatLichApiController
             return;
         }
 
-        $Manguoidung = $data['Manguoidung'] ?? '';
-        $Thoigiandatlich = $data['Thoigiandatlich'];
-        $Trangthai = $data['Trangthai'] ?? '';
-
-        if (!is_string($Manguoidung) || !is_string($Trangthai) ) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Dữ liệu đầu vào không hợp lệ']);
-            return;
+        // Admin có thể cập nhật cả trạng thái, user thì không
+        $Thoigiandatlich = $data['Thoigiandatlich'] ?? $datLich->Thoigiandatlich;
+        $Trangthai = $datLich->Trangthai_; // Giữ nguyên trạng thái cũ
+        if (SessionHelper::isAdmin() && isset($data['Trangthai'])) {
+             $Trangthai = $data['Trangthai']; // Admin có thể đổi trạng thái
         }
-
 
         $result = $this->datLichModel->updateDatLich(
             $id,
-            $Manguoidung,
             $Thoigiandatlich,
             $Trangthai
         );
@@ -118,7 +150,24 @@ class DatLichApiController
     // Xóa sản phẩm theo ID
     public function destroy($id)
     {
+        SessionHelper::start();
         header('Content-Type: application/json');
+        
+        $datLich = $this->datLichModel->getDatLichById($id);
+
+        if (!$datLich) {
+            http_response_code(404);
+            echo json_encode(['message' => 'Lịch không tìm thấy']);
+            return;
+        }
+
+        // Kiểm tra quyền
+        if (!SessionHelper::isAdmin() && !(SessionHelper::isLoggedIn() && SessionHelper::getUserId() == $datLich->Manguoidung)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Bạn không có quyền xóa lịch đặt này.']);
+            return;
+        }
+        
         if (!is_numeric($id)) {
             http_response_code(400);
             echo json_encode(['error' => 'ID không hợp lệ']);

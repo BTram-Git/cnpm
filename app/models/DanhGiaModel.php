@@ -48,16 +48,10 @@ public function addDanhGia($Danhgiasao,$Nhanxet,$Ngaydanhgia,$Manguoidung,$MaHD)
     if (count($errors) > 0) {
         return $errors;
     }
-//INSERT INTO danhgia (Danhgiasao,Nhanxet,Ngaydanhgia,Manguoidung,MaHD) VALUE ("4","hssj",NOW(),"1","1")
+
     $query = "INSERT INTO " . $this->table_name . " ( Danhgiasao,Nhanxet,Ngaydanhgia,Manguoidung,MaHD) 
     VALUES (:Danhgiasao,:Nhanxet,:Ngaydanhgia,:Manguoidung,:MaHD)";
     $stmt = $this->conn->prepare($query);
-
-    $Danhgiasao = htmlspecialchars(strip_tags($Danhgiasao));
-    $Nhanxet = htmlspecialchars(strip_tags($Nhanxet));
-    $Ngaydanhgia = (new DateTime())->format('Y-m-d H:i:s');
-    $Manguoidung = htmlspecialchars(strip_tags($Manguoidung));
-    $MaHD = htmlspecialchars(strip_tags($MaHD));
 
     $stmt->bindParam(':Danhgiasao', $Danhgiasao);
     $stmt->bindParam(':Nhanxet', $Nhanxet);
@@ -72,25 +66,18 @@ public function addDanhGia($Danhgiasao,$Nhanxet,$Ngaydanhgia,$Manguoidung,$MaHD)
     return false;
 }
 
-public function updateDanhGia($id, $Danhgiasao,$Nhanxet,$Ngaydanhgia,$Manguoidung,$MaHD)
+public function updateDanhGia($id, $Danhgiasao, $Nhanxet)
 {
-    $query = "UPDATE " . $this->table_name . " SET Danhgiasao = :Danhgiasao, Nhanxet = :Nhanxet,Ngaydanhgia = :Ngaydanhgia, Manguoidung = :Manguoidung,
-    MaHD = :MaHD WHERE MaDG = :id";
+    $query = "UPDATE " . $this->table_name . " SET Danhgiasao = :Danhgiasao, Nhanxet = :Nhanxet, Ngaydanhgia = :Ngaydanhgia WHERE MaDG = :id";
     $stmt = $this->conn->prepare($query);
 
+    $Ngaydanhgia = date('Y-m-d H:i:s'); // Cập nhật ngày đánh giá
 
-    $Danhgiasao = htmlspecialchars(strip_tags($Danhgiasao));
-    $Nhanxet = htmlspecialchars(strip_tags($Nhanxet));
-    $Ngaydanhgia = (new DateTime())->format('Y-m-d H:i:s');
-    $Manguoidung = htmlspecialchars(strip_tags($Manguoidung));
-    $MaHD = htmlspecialchars(strip_tags($MaHD));
-
+    $stmt->bindParam(':id', $id);
     $stmt->bindParam(':Danhgiasao', $Danhgiasao);
     $stmt->bindParam(':Nhanxet', $Nhanxet);
     $stmt->bindParam(':Ngaydanhgia', $Ngaydanhgia);
-    $stmt->bindParam(':Manguoidung', $Manguoidung);
-    $stmt->bindParam(':MaHD', $MaHD);
-    $stmt->bindParam(':id', $id);
+    
     if ($stmt->execute()) {
         return true;
     }
