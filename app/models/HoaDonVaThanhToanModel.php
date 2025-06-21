@@ -84,13 +84,28 @@ public function updateHoaDonVaThanhToan($MaHD, $NgayThanhToan, $Tongtien, $MaDL,
 
 public function deleteHoaDonVaThanhToan($MaHD)
 {
-    $query = "DELETE FROM " . $this->table_name . " WHERE MaHD = :MaHD";
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(':MaHD', $MaHD);
-    if ($stmt->execute()) {
-        return true;
+    try {
+        // Kiểm tra hóa đơn có tồn tại trong bảng đánh giá không
+        $queryCheck = "SELECT COUNT(*) as count FROM danhgia WHERE MaHD = :MaHD";
+        $stmtCheck = $this->conn->prepare($queryCheck);
+        $stmtCheck->bindParam(':MaHD', $MaHD);
+        $stmtCheck->execute();
+        $result = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+        if ($result['count'] > 0) {
+            // DỪNG HÀM NGAY LẬP TỨC
+            return ['error' => 'Không thể xóa: Hóa đơn này đã được đánh giá!'];
+        }
+        // Nếu không có đánh giá thì xóa hóa đơn
+        $query = "DELETE FROM " . $this->table_name . " WHERE MaHD = :MaHD";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':MaHD', $MaHD);
+        if ($stmt->execute()) {
+            return true;
+        }
+        return ['error' => 'Không thể xóa hóa đơn'];
+    } catch (PDOException $e) {
+        return ['error' => 'Lỗi: ' . $e->getMessage()];
     }
-    return false;
 }
 
 } 

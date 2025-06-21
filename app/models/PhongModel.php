@@ -62,13 +62,47 @@ public function updatePhong($Maphong, $Tenphong, $Loaiphong, $MatrangthaiP)
 
 public function deletePhong($Maphong)
 {
-    $query = "DELETE FROM " . $this->table_name . " WHERE Maphong = :Maphong";
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(':Maphong', $Maphong);
-    if ($stmt->execute()) {
-        return true;
+    try {
+        // Kiểm tra phòng có trong bảng đặt lịch không
+        $queryCheckDatLich = "SELECT COUNT(*) as count FROM datlich WHERE Maphong = :Maphong";
+        $stmtCheckDatLich = $this->conn->prepare($queryCheckDatLich);
+        $stmtCheckDatLich->bindParam(':Maphong', $Maphong);
+        $stmtCheckDatLich->execute();
+        if ($stmtCheckDatLich->fetch(PDO::FETCH_ASSOC)['count'] > 0) {
+            return ['error' => 'Không thể xóa: Phòng này đang có trong lịch đặt!'];
+        }
+
+        // Kiểm tra phòng có trong bảng hóa đơn không
+        $queryCheckHoaDon = "SELECT COUNT(*) as count FROM hoadon_va_thanhtoan WHERE Maphong = :Maphong";
+        $stmtCheckHoaDon = $this->conn->prepare($queryCheckHoaDon);
+        $stmtCheckHoaDon->bindParam(':Maphong', $Maphong);
+        $stmtCheckHoaDon->execute();
+        if ($stmtCheckHoaDon->fetch(PDO::FETCH_ASSOC)['count'] > 0) {
+            return ['error' => 'Không thể xóa: Phòng này đã có hóa đơn liên quan!'];
+        }
+
+        // Kiểm tra phòng có trong bảng trạng thái phòng không
+        $queryCheckTrangThai = "SELECT COUNT(*) as count FROM trangthaiphong WHERE Maphong = :Maphong";
+        $stmtCheckTrangThai = $this->conn->prepare($queryCheckTrangThai);
+        $stmtCheckTrangThai->bindParam(':Maphong', $Maphong);
+        $stmtCheckTrangThai->execute();
+        if ($stmtCheckTrangThai->fetch(PDO::FETCH_ASSOC)['count'] > 0) {
+            return ['error' => 'Không thể xóa: Phòng này đang có trạng thái được ghi nhận!'];
+        }
+
+        // Nếu không có liên kết thì xóa
+        $queryDelete = "DELETE FROM " . $this->table_name . " WHERE Maphong = :Maphong";
+        $stmtDelete = $this->conn->prepare($queryDelete);
+        $stmtDelete->bindParam(':Maphong', $Maphong);
+
+        if ($stmtDelete->execute()) {
+            return true;
+        }
+
+        return ['error' => 'Không thể xóa phòng do lỗi không xác định.'];
+    } catch (PDOException $e) {
+        return ['error' => 'Lỗi PDO: ' . $e->getMessage()];
     }
-    return false;
 }
 
 } 

@@ -107,11 +107,14 @@ class TrangThaiApiController
         }
 
         $result = $this->trangThaiModel->deleteTrangThai($id);
-        if ($result) {
+        if ($result === true) {
             echo json_encode(['message' => 'Xóa trạng thái thành công']);
+        } elseif (is_array($result) && isset($result['error'])) {
+            http_response_code(400); // Bad Request
+            echo json_encode($result);
         } else {
-            http_response_code(400);
-            echo json_encode(['message' => 'Xóa trạng thái thất bại']);
+            http_response_code(500); // Internal Server Error
+            echo json_encode(['error' => 'Xóa trạng thái thất bại do lỗi không xác định.']);
         }
     }
 }

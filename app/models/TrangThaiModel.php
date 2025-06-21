@@ -54,13 +54,44 @@ public function updateTrangThai($Matrangthai, $Tentrangthai)
 
 public function deleteTrangThai($Matrangthai)
 {
-    $query = "DELETE FROM " . $this->table_name . " WHERE Matrangthai = :Matrangthai";
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(':Matrangthai', $Matrangthai);
-    if ($stmt->execute()) {
-        return true;
+    try {
+        // Kiểm tra xem trạng thái có được sử dụng trong hóa đơn không
+        $queryCheckHoaDon = "SELECT COUNT(*) FROM hoadon_va_thanhtoan WHERE Matrangthai = :Matrangthai";
+        $stmtCheckHoaDon = $this->conn->prepare($queryCheckHoaDon);
+        $stmtCheckHoaDon->bindParam(':Matrangthai', $Matrangthai);
+        $stmtCheckHoaDon->execute();
+        if ($stmtCheckHoaDon->fetchColumn() > 0) {
+            return ['error' => 'Không thể xóa: Trạng thái này đang được sử dụng trong hóa đơn!'];
+        }
+
+        // Kiểm tra xem trạng thái có được sử dụng trong trạng thái phòng không
+        // Giả sử tên cột trong bảng trangthaiphong cũng là Matrangthai
+        $queryCheckTrangThaiPhong = "SELECT COUNT(*) FROM trangthaiphong WHERE Matrangthai = :Matrangthai";
+        $stmtCheckTrangThaiPhong = $this->conn->prepare($queryCheckTrangThaiPhong);
+        $stmtCheckTrangThaiPhong->bindParam(':Matrangthai', $Matrangthai);
+        $stmtCheckTrangThaiPhong->execute();
+        if ($stmtCheckTrangThaiPhong->fetchColumn() > 0) {
+            return ['error' => 'Không thể xóa: Trạng thái này đang được sử dụng trong trạng thái phòng!'];
+        }
+
+        // Nếu không có liên kết, tiến hành xóa
+        $queryDelete = "DELETE FROM " . $this->table_name . " WHERE Matrangthai = :Matrangthai";
+        $stmtDelete = $this->conn->prepare($queryDelete);
+        $stmtDelete->bindParam(':Matrangthai', $Matrangthai);
+        
+        if ($stmtDelete->execute()) {
+            if ($stmtDelete->rowCount() > 0) {
+                return true;
+            } else {
+                return ['error' => 'Trạng thái không tồn tại.'];
+            }
+        }
+        
+        return ['error' => 'Không thể xóa trạng thái do lỗi không xác định.'];
+
+    } catch (PDOException $e) {
+        return ['error' => 'Lỗi PDO: ' . $e->getMessage()];
     }
-    return false;
 }
 
 } 

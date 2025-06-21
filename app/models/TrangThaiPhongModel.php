@@ -54,13 +54,33 @@ public function updateTrangThaiPhong($MatrangthaiP, $Tentrangthai)
 
 public function deleteTrangThaiPhong($MatrangthaiP)
 {
-    $query = "DELETE FROM " . $this->table_name . " WHERE MatrangthaiP = :MatrangthaiP";
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(':MatrangthaiP', $MatrangthaiP);
-    if ($stmt->execute()) {
-        return true;
+    try {
+        // Kiểm tra xem trạng thái phòng có được sử dụng trong bảng 'phong' không
+        $queryCheck = "SELECT COUNT(*) FROM phong WHERE MatrangthaiP = :MatrangthaiP";
+        $stmtCheck = $this->conn->prepare($queryCheck);
+        $stmtCheck->bindParam(':MatrangthaiP', $MatrangthaiP);
+        $stmtCheck->execute();
+        if ($stmtCheck->fetchColumn() > 0) {
+            return ['error' => 'Không thể xóa: Trạng thái này đang được sử dụng bởi một phòng!'];
+        }
+
+        // Nếu không có liên kết, tiến hành xóa
+        $queryDelete = "DELETE FROM " . $this->table_name . " WHERE MatrangthaiP = :MatrangthaiP";
+        $stmtDelete = $this->conn->prepare($queryDelete);
+        $stmtDelete->bindParam(':MatrangthaiP', $MatrangthaiP);
+
+        if ($stmtDelete->execute()) {
+            if ($stmtDelete->rowCount() > 0) {
+                return true;
+            } else {
+                return ['error' => 'Trạng thái phòng không tồn tại.'];
+            }
+        }
+        
+        return ['error' => 'Không thể xóa trạng thái phòng do lỗi không xác định.'];
+    } catch (PDOException $e) {
+        return ['error' => 'Lỗi PDO: ' . $e->getMessage()];
     }
-    return false;
 }
 
 } 

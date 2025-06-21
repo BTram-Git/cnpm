@@ -70,7 +70,7 @@ class DatLichApiController
             echo json_encode(['errors' => $result]);
         } elseif ($result === true) {
             http_response_code(201);
-            echo json_encode(['message' => 'Dat lich created successfully']);
+            echo json_encode(['message' => 'Dat lich được thêm thành công ']);
         } else {
             http_response_code(500);
             echo json_encode(['error' => $result['error'] ?? 'Thêm Dat lich thất bại']);
@@ -108,10 +108,10 @@ class DatLichApiController
         );
 
         if ($result) {
-            echo json_encode(['message' => 'Product updated successfully']);
+            echo json_encode(['message' => 'Đặt lịch cập nhật thành công']);
         } else {
             http_response_code(400);
-            echo json_encode(['message' => 'Product update failed']);
+            echo json_encode(['message' => 'Đặt lịch cập nhật thất bại']);
         }
     }
 
@@ -126,11 +126,14 @@ class DatLichApiController
         }
 
         $result = $this->datLichModel->deleteDatLich($id);
-        if ($result) {
+        if ($result === true) {
             echo json_encode(['message' => 'Xóa đặt lịch thành công']);
+        } elseif (is_array($result) && isset($result['error'])) {
+            http_response_code(400); // Bad Request
+            echo json_encode($result);
         } else {
-            http_response_code(400);
-            echo json_encode(['message' => 'Xóa đặt lịch thất bại']);
+            http_response_code(500); // Internal Server Error
+            echo json_encode(['error' => 'Xóa đặt lịch thất bại do lỗi không xác định.']);
         }
     }
 }

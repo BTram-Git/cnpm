@@ -82,8 +82,21 @@ public function updateDichVu($id, $Tendichvu, $Gia,$MoTa )
 
     return false;
 }
+// Kiểm tra dịch vụ có liên kết với chitietdichvu không
+private function hasRelatedChiTietDichVu($MaDV) {
+    $query = "SELECT COUNT(*) as count FROM chitietdichvu WHERE MaDV = :MaDV";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':MaDV', $MaDV);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return ($result['count'] > 0);
+}
 public function deleteDichVu($MaDV)
 {
+    // Kiểm tra liên kết với chitietdichvu
+    if ($this->hasRelatedChiTietDichVu($MaDV)) {
+        return ['error' => 'Không thể xóa: Dịch vụ này đang được sử dụng trong chi tiết dịch vụ!'];
+    }
     $query = "DELETE FROM " . $this->table_name . " WHERE MaDV = :MaDV";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(':MaDV', $MaDV);

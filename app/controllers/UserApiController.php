@@ -172,7 +172,7 @@ class UserApiController
     }
 
     // Xóa người dùng
-    public function deleteUser($id)
+    public function destroy($id)
     {
         header('Content-Type: application/json');
         
@@ -185,13 +185,14 @@ class UserApiController
         $result = $this->userModel->deleteUser($id);
 
         if ($result === true) {
-            echo json_encode([
-                'message' => 'Xóa người dùng thành công',
-                'id' => $id
-            ]);
-        } else {
-            http_response_code(400);
+            http_response_code(200);
+            echo json_encode(['message' => 'Xóa người dùng thành công']);
+        } elseif (is_array($result) && isset($result['error'])) {
+            http_response_code(400); // Bad Request
             echo json_encode($result);
+        } else {
+            http_response_code(500); // Internal Server Error
+            echo json_encode(['error' => 'Xóa người dùng thất bại do lỗi không xác định.']);
         }
     }
 }

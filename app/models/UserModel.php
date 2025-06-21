@@ -123,13 +123,52 @@ public function updateUser($id, $hoten, $sdt, $diachi, $email, $ngaysinh, $gioit
 
 public function deleteUser($id) 
 {
-    $query = "DELETE FROM " . $this->table_name . " WHERE Manguoidung = :id";
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(':id', $id);
-    if ($stmt->execute()) {
-        return true;
+    try {
+        // 1. Kiểm tra người dùng có trong bảng `datlich` không
+        $queryDatLich = "SELECT COUNT(*) FROM datlich WHERE Manguoidung = :id";
+        $stmtDatLich = $this->conn->prepare($queryDatLich);
+        $stmtDatLich->bindParam(':id', $id);
+        $stmtDatLich->execute();
+        if ($stmtDatLich->fetchColumn() > 0) {
+            return ['error' => 'Không thể xóa: Người dùng này đã có lịch đặt!'];
+        }
+
+        // 2. Kiểm tra người dùng có trong bảng `hoadon_va_thanhtoan` không
+        $queryHoaDon = "SELECT COUNT(*) FROM hoadon_va_thanhtoan WHERE Manguoidung = :id";
+        $stmtHoaDon = $this->conn->prepare($queryHoaDon);
+        $stmtHoaDon->bindParam(':id', $id);
+        $stmtHoaDon->execute();
+        if ($stmtHoaDon->fetchColumn() > 0) {
+            return ['error' => 'Không thể xóa: Người dùng này đã có hóa đơn!'];
+        }
+
+        // 3. Kiểm tra người dùng có trong bảng `danhgia` không
+        $queryDanhGia = "SELECT COUNT(*) FROM danhgia WHERE Manguoidung = :id";
+        $stmtDanhGia = $this->conn->prepare($queryDanhGia);
+        $stmtDanhGia->bindParam(':id', $id);
+        $stmtDanhGia->execute();
+        if ($stmtDanhGia->fetchColumn() > 0) {
+            return ['error' => 'Không thể xóa: Người dùng này đã để lại đánh giá!'];
+        }
+        
+        // Nếu không có liên kết nào, tiến hành xóa người dùng
+        $queryDelete = "DELETE FROM " . $this->table_name . " WHERE Manguoidung = :id";
+        $stmtDelete = $this->conn->prepare($queryDelete);
+        $stmtDelete->bindParam(':id', $id);
+        
+        if ($stmtDelete->execute()) {
+            // Kiểm tra xem có hàng nào thực sự bị xóa không
+            if ($stmtDelete->rowCount() > 0) {
+                return true;
+            } else {
+                return ['error' => 'Người dùng không tồn tại hoặc đã bị xóa.'];
+            }
+        } else {
+            return ['error' => 'Không thể xóa người dùng do lỗi không xác định.'];
+        }
+    } catch (PDOException $e) {
+        return ['error' => 'Lỗi PDO: ' . $e->getMessage()];
     }
-    return false;
 }
 
 } 

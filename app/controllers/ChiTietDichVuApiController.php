@@ -98,23 +98,29 @@ class ChiTietDichVuApiController
         }
     }
 
-    // Xóa sản phẩm theo ID
-    public function destroy($id)
+    // Xóa sản phẩm theo ID, với MaDL từ URL và MaDV từ Body
+    public function destroy($MaDL)
     {
         header('Content-Type: application/json');
+
+        // Lấy MaDV từ body
         $data = json_decode(file_get_contents("php://input"), true);
         $MaDV = $data['MaDV'] ?? null;
-        if (empty($id) || empty($MaDV)) {
+
+        // Kiểm tra xem đã có đủ cả 2 key chưa
+        if (empty($MaDL) || empty($MaDV)) {
             http_response_code(400);
-            echo json_encode(['error' => 'Thiếu MaDL hoặc MaDV']);
+            echo json_encode(['error' => 'Thiếu MaDL trong URL hoặc MaDV trong body của request.']);
             return;
         }
-        $result = $this->chiTietDichVuModel->deleteChiTietDichVu($id, $MaDV);
-        if ($result) {
+
+        $result = $this->chiTietDichVuModel->deleteChiTietDichVu($MaDL, $MaDV);
+        
+        if ($result === true) {
             echo json_encode(['message' => 'Xóa chi tiết dịch vụ thành công']);
         } else {
             http_response_code(400);
-            echo json_encode(['message' => 'Xóa chi tiết dịch vụ thất bại']);
+            echo json_encode(['error' => 'Xóa chi tiết dịch vụ thất bại. Có thể do bản ghi không tồn tại.']);
         }
     }
 }

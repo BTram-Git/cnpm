@@ -58,13 +58,29 @@ public function updatePhuongThuc($MaPT, $TenPT, $Mota)
 
 public function deletePhuongThuc($MaPT)
 {
-    $query = "DELETE FROM " . $this->table_name . " WHERE MaPT = :MaPT";
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(':MaPT', $MaPT);
-    if ($stmt->execute()) {
-        return true;
+    try {
+        // Kiểm tra xem phương thức thanh toán có được sử dụng trong hóa đơn không
+        $queryCheck = "SELECT COUNT(*) as count FROM hoadon_va_thanhtoan WHERE MaPT = :MaPT";
+        $stmtCheck = $this->conn->prepare($queryCheck);
+        $stmtCheck->bindParam(':MaPT', $MaPT);
+        $stmtCheck->execute();
+        if ($stmtCheck->fetch(PDO::FETCH_ASSOC)['count'] > 0) {
+            return ['error' => 'Không thể xóa: Phương thức thanh toán này đang được sử dụng trong hóa đơn!'];
+        }
+
+        // Nếu không có liên kết thì tiến hành xóa
+        $queryDelete = "DELETE FROM " . $this->table_name . " WHERE MaPT = :MaPT";
+        $stmtDelete = $this->conn->prepare($queryDelete);
+        $stmtDelete->bindParam(':MaPT', $MaPT);
+
+        if ($stmtDelete->execute()) {
+            return true;
+        }
+        
+        return ['error' => 'Không thể xóa phương thức thanh toán do lỗi không xác định.'];
+    } catch (PDOException $e) {
+        return ['error' => 'Lỗi PDO: ' . $e->getMessage()];
     }
-    return false;
 }
 
 } 

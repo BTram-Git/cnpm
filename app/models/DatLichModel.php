@@ -19,17 +19,16 @@ public function getDatLichById($id)
 { 
     $query = "SELECT dl.MaDL, dl.Manguoidung, dl.Thoigiandatlich, dl.Trangthai_ 
     FROM " . $this->table_name . " dl 
-    WHERE dl.MaDL = 1";
+    WHERE dl.MaDL = :id";
 
-$stmt = $this->conn->prepare($query); 
-//$stmt->bindParam(':id', $id); 
-$stmt->execute(); 
-$result = $stmt->fetch(PDO::FETCH_OBJ);
-return $result;
-
+    $stmt = $this->conn->prepare($query); 
+    $stmt->bindParam(':id', $id); 
+    $stmt->execute(); 
+    $result = $stmt->fetch(PDO::FETCH_OBJ);
+    return $result;
 }
 // Thêm mới danh mục
-public function addDatLich($Manguoidung, $Thoigiandatlich,$Trangthai)
+public function addDatLich($Manguoidung, $Thoigiandatlich,$Trangthai, $Maphong)
 {
     $errors = [];
 
@@ -89,13 +88,36 @@ public function updateDatLich($id, $Manguoidung, $Thoigiandatlich,$Trangthai)
 
 public function deleteDatLich($MaDL)
 {
-    $query = "DELETE FROM " . $this->table_name . " WHERE MaDL = :MaDL";
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(':MaDL', $MaDL);
-    if ($stmt->execute()) {
-        return true;
+    try {
+        // Kiểm tra xem lịch đặt có trong bảng hóa đơn không
+        $queryCheckHoaDon = "SELECT COUNT(*) as count FROM hoadon_va_thanhtoan WHERE MaDL = :MaDL";
+        $stmtCheckHoaDon = $this->conn->prepare($queryCheckHoaDon);
+        $stmtCheckHoaDon->bindParam(':MaDL', $MaDL);
+        $stmtCheckHoaDon->execute();
+        if ($stmtCheckHoaDon->fetch(PDO::FETCH_ASSOC)['count'] > 0) {
+            return ['error' => 'Không thể xóa: Lịch đặt này đã có hóa đơn!'];
+        }
+
+        // Kiểm tra xem lịch đặt có trong chi tiết dịch vụ không
+        $queryCheckChiTiet = "SELECT COUNT(*) as count FROM chitietdichvu WHERE MaDL = :MaDL";
+        $stmtCheckChiTiet = $this->conn->prepare($queryCheckChiTiet);
+        $stmtCheckChiTiet->bindParam(':MaDL', $MaDL);
+        $stmtCheckChiTiet->execute();
+        if ($stmtCheckChiTiet->fetch(PDO::FETCH_ASSOC)['count'] > 0) {
+            return ['error' => 'Không thể xóa: Lịch đặt này đã có chi tiết dịch vụ!'];
+        }
+
+        // Nếu không, tiến hành xóa
+        $queryDelete = "DELETE FROM " . $this->table_name . " WHERE MaDL = :MaDL";
+        $stmtDelete = $this->conn->prepare($queryDelete);
+        $stmtDelete->bindParam(':MaDL', $MaDL);
+        if ($stmtDelete->execute()) {
+            return true;
+        }
+        return ['error' => 'Không thể xóa lịch đặt do lỗi không xác định.'];
+    } catch (PDOException $e) {
+        return ['error' => 'Lỗi PDO: ' . $e->getMessage()];
     }
-    return false;
 }
 
 }

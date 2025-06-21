@@ -119,10 +119,12 @@ class HoaDonVaThanhToanApiController
             echo json_encode(['error' => 'ID không hợp lệ']);
             return;
         }
-
         $result = $this->hoaDonVaThanhToanModel->deleteHoaDonVaThanhToan($id);
-        if ($result) {
+        if ($result === true) {
             echo json_encode(['message' => 'Xóa hóa đơn thành công']);
+        } elseif (is_array($result) && isset($result['error'])) {
+            http_response_code(400);
+            echo json_encode($result);
         } else {
             http_response_code(400);
             echo json_encode(['message' => 'Xóa hóa đơn thất bại']);

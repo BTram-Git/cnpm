@@ -29,29 +29,46 @@ return $result;
 public function addChiTietDichVu($MaDL, $MaDV)
 {
     $query = "INSERT INTO " . $this->table_name . " (MaDL, MaDV) VALUES (:MaDL, :MaDV)";
-    $stmt = $this->conn->prepare($query);
-    $MaDL = htmlspecialchars(strip_tags($MaDL));
-    $MaDV = htmlspecialchars(strip_tags($MaDV));
-    $stmt->bindParam(':MaDL', $MaDL);
-    $stmt->bindParam(':MaDV', $MaDV);
-    if ($stmt->execute()) {
-        return true;
+    try {
+        $stmt = $this->conn->prepare($query);
+        $MaDL = htmlspecialchars(strip_tags($MaDL));
+        $MaDV = htmlspecialchars(strip_tags($MaDV));
+        $stmt->bindParam(':MaDL', $MaDL);
+        $stmt->bindParam(':MaDV', $MaDV);
+        if ($stmt->execute()) {
+            return true;
+        }
+        return false;
+    } catch (PDOException $e) {
+        // Bắt lỗi ràng buộc khóa ngoại (mã lỗi 23000)
+        if ($e->getCode() == '23000') {
+            return ['error' => 'Không thể thêm: MaDL hoặc MaDV không tồn tại trong bảng gốc.'];
+        } else {
+            return ['error' => 'Lỗi PDO: ' . $e->getMessage()];
+        }
     }
-    return false;
 }
 
 public function updateChiTietDichVu($MaDL, $MaDV)
 {
     $query = "UPDATE " . $this->table_name . " SET MaDV = :MaDV WHERE MaDL = :MaDL";
-    $stmt = $this->conn->prepare($query);
-    $MaDL = htmlspecialchars(strip_tags($MaDL));
-    $MaDV = htmlspecialchars(strip_tags($MaDV));
-    $stmt->bindParam(':MaDL', $MaDL);
-    $stmt->bindParam(':MaDV', $MaDV);
-    if ($stmt->execute()) {
-        return true;
+    try {
+        $stmt = $this->conn->prepare($query);
+        $MaDL = htmlspecialchars(strip_tags($MaDL));
+        $MaDV = htmlspecialchars(strip_tags($MaDV));
+        $stmt->bindParam(':MaDL', $MaDL);
+        $stmt->bindParam(':MaDV', $MaDV);
+        if ($stmt->execute()) {
+            return true;
+        }
+        return false;
+    } catch (PDOException $e) {
+        if ($e->getCode() == '23000') {
+            return ['error' => 'Không thể cập nhật: MaDV không tồn tại trong bảng dịch vụ.'];
+        } else {
+            return ['error' => 'Lỗi PDO: ' . $e->getMessage()];
+        }
     }
-    return false;
 }
 
 public function deleteChiTietDichVu($MaDL, $MaDV)
