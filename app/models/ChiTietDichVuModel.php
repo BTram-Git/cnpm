@@ -58,10 +58,9 @@ public function updateChiTietDichVu($MaDL, $MaDV)
         $MaDV = htmlspecialchars(strip_tags($MaDV));
         $stmt->bindParam(':MaDL', $MaDL);
         $stmt->bindParam(':MaDV', $MaDV);
-        if ($stmt->execute()) {
-            return true;
-        }
-        return false;
+        $stmt->execute();
+        // Trả về số dòng bị ảnh hưởng
+        return $stmt->rowCount();
     } catch (PDOException $e) {
         if ($e->getCode() == '23000') {
             return ['error' => 'Không thể cập nhật: MaDV không tồn tại trong bảng dịch vụ.'];

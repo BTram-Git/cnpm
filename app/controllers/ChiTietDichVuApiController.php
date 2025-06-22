@@ -65,29 +65,25 @@ class ChiTietDichVuApiController
     public function update($id)
     {
         header('Content-Type: application/json');
-        $data = json_decode(file_get_contents("php://input"), true);
+        $data = json_decode(file_get_contents("php://input"));
 
-        if (!is_array($data) || empty($id)) {
+        if (!$data || !isset($data->MaDV)) {
             http_response_code(400);
-            echo json_encode(['error' => 'Dữ liệu hoặc ID không hợp lệ']);
+            echo json_encode(['error' => 'Dữ liệu không hợp lệ. Vui lòng cung cấp MaDV.']);
             return;
         }
 
-        $MaDV = $data['MaDV'] ?? '';
+        $rowCount = $this->chiTietDichVuModel->updateChiTietDichVu($id, $data->MaDV);
 
-        if (empty($MaDV)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Vui lòng nhập đầy đủ thông tin']);
-            return;
-        }
-
-        $result = $this->chiTietDichVuModel->updateChiTietDichVu($id, $MaDV);
-
-        if ($result === true) {
-            echo json_encode(['message' => 'Cập nhật chi tiết dịch vụ thành công']);
+        if (is_array($rowCount) && isset($rowCount['error'])) {
+            http_response_code(500);
+            echo json_encode($rowCount);
+        } elseif ($rowCount > 0) {
+            http_response_code(200);
+            echo json_encode(['message' => 'Cập nhật chi tiết dịch vụ thành công.']);
         } else {
-            http_response_code(400);
-            echo json_encode(['error' => 'Cập nhật chi tiết dịch vụ thất bại']);
+            http_response_code(404);
+            echo json_encode(['message' => 'Không tìm thấy chi tiết dịch vụ để cập nhật hoặc dữ liệu không thay đổi.']);
         }
     }
 
