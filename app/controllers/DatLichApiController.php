@@ -130,15 +130,25 @@ class DatLichApiController
             return;
         }
 
-        // Admin có thể cập nhật cả trạng thái và người dùng, user thì không
-        $Manguoidung = $datLich->Manguoidung; // Giữ nguyên người dùng cũ
-        if (SessionHelper::isAdmin() && isset($data['Manguoidung'])) {
-            $Manguoidung = $data['Manguoidung']; // Admin có thể đổi người dùng
-        }
+        // Logic cập nhật trạng thái mới
         $Thoigiandatlich = $data['Thoigiandatlich'] ?? $datLich->Thoigiandatlich;
-        $Trangthai = $datLich->Trangthai_; // Giữ nguyên trạng thái cũ
-        if (SessionHelper::isAdmin() && isset($data['Trangthai_'])) {
-             $Trangthai = $data['Trangthai_']; // Admin có thể đổi trạng thái
+        $Trangthai = $datLich->Trangthai_; // Mặc định giữ nguyên trạng thái cũ
+
+        if (SessionHelper::isAdmin()) {
+            // Admin có toàn quyền thay đổi trạng thái
+            if (isset($data['Trangthai_'])) {
+                $Trangthai = $data['Trangthai_'];
+            }
+        } else {
+            // User chỉ có thể tự hủy lịch của mình khi đang ở trạng thái 'Chờ xác nhận'
+            if (isset($data['Trangthai_']) && $data['Trangthai_'] === 'Đã hủy' && $datLich->Trangthai_ === 'Chờ xác nhận') {
+                $Trangthai = 'Đã hủy';
+            }
+        }
+        
+        $Manguoidung = $datLich->Manguoidung; // User không thể đổi chủ lịch đặt
+        if (SessionHelper::isAdmin() && isset($data['Manguoidung'])) {
+            $Manguoidung = $data['Manguoidung']; // Admin có thể đổi
         }
 
         $result = $this->datLichModel->updateDatLich(
