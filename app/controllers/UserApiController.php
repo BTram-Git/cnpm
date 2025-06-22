@@ -130,11 +130,11 @@ class UserApiController
         $user = $this->userModel->loginUser($email, $matkhau);
 
         if ($user && !isset($user['error'])) {
-            // SessionHelper::start();
-            // $_SESSION['user_id'] = $user['Manguoidung'];
-            // $_SESSION['username'] = $user['Hoten'];
-            // $_SESSION['user_email'] = $user['Email'];
-            // $_SESSION['role'] = $user['Vaitro']; // Lấy vai trò từ DB
+            SessionHelper::start();
+            $_SESSION['user_id'] = $user['Manguoidung'];
+            $_SESSION['username'] = $user['Hoten'];
+            $_SESSION['user_email'] = $user['Email'];
+            $_SESSION['role'] = $user['Vaitro']; // Lấy vai trò từ DB
 
             echo json_encode([
                 'message' => 'Đăng nhập thành công',
