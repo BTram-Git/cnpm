@@ -73,20 +73,18 @@ public function addDatLich($Manguoidung, $Thoigiandatlich, $Trangthai)
     return false;
 }
 
-public function updateDatLich($id, $Thoigiandatlich, $Trangthai)
+public function updateDatLich($id, $Manguoidung, $Thoigiandatlich, $Trangthai)
 {
-    $query = "UPDATE " . $this->table_name . " SET Thoigiandatlich = :Thoigiandatlich, Trangthai_ = :Trangthai WHERE MaDL = :id";
+    $query = "UPDATE " . $this->table_name . " SET Manguoidung = :Manguoidung, Thoigiandatlich = :Thoigiandatlich, Trangthai_ = :Trangthai WHERE MaDL = :id";
     $stmt = $this->conn->prepare($query);
 
     $stmt->bindParam(':id', $id);
+    $stmt->bindParam(':Manguoidung', $Manguoidung);
     $stmt->bindParam(':Thoigiandatlich', $Thoigiandatlich);
     $stmt->bindParam(':Trangthai', $Trangthai);
 
-    if ($stmt->execute()) {
-        return true;
-    }
-
-    return false;
+    $stmt->execute();
+    return $stmt->rowCount();
 }
 
 public function deleteDatLich($MaDL)

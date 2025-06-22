@@ -54,10 +54,8 @@ public function updatePhong($Maphong, $Tenphong, $Loaiphong, $MatrangthaiP)
     $stmt->bindParam(':Tenphong', $Tenphong);
     $stmt->bindParam(':Loaiphong', $Loaiphong);
     $stmt->bindParam(':MatrangthaiP', $MatrangthaiP);
-    if ($stmt->execute()) {
-        return true;
-    }
-    return false;
+    $stmt->execute();
+    return $stmt->rowCount();
 }
 
 public function deletePhong($Maphong)

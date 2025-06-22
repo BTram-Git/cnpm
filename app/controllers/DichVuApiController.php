@@ -119,11 +119,11 @@ class DichVuApiController
             $MoTa
         );
 
-        if ($result) {
-            echo json_encode(['message' => 'Product updated successfully']);
+        if ($result > 0) {
+            echo json_encode(['message' => 'Cập nhật dịch vụ thành công.']);
         } else {
-            http_response_code(400);
-            echo json_encode(['message' => 'Product update failed']);
+            http_response_code(404);
+            echo json_encode(['message' => 'Không tìm thấy dịch vụ để cập nhật hoặc dữ liệu không thay đổi.']);
         }
     }
     // Xóa sản phẩm theo ID

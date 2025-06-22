@@ -71,6 +71,9 @@ class DatLichApiController
 
         header('Content-Type: application/json');
         $data = json_decode(file_get_contents("php://input"), true);
+        
+        // Dòng code debug: Dừng và in ra nội dung của $data
+        // die(json_encode($data));
 
         if (!is_array($data)) {
             http_response_code(400);
@@ -80,7 +83,8 @@ class DatLichApiController
 
         $Manguoidung = SessionHelper::getUserId(); // Lấy ID người dùng từ session
         $Thoigiandatlich = $data['Thoigiandatlich'] ?? date('Y-m-d H:i:s');
-        $Trangthai = $data['Trangthai'] ?? 'Chờ xác nhận';
+        // Luôn đặt trạng thái mặc định là "Chờ xác nhận" khi tạo mới
+        $Trangthai = 'Chờ xác nhận';
     
         $result = $this->datLichModel->addDatLich(
             $Manguoidung,
@@ -126,24 +130,29 @@ class DatLichApiController
             return;
         }
 
-        // Admin có thể cập nhật cả trạng thái, user thì không
+        // Admin có thể cập nhật cả trạng thái và người dùng, user thì không
+        $Manguoidung = $datLich->Manguoidung; // Giữ nguyên người dùng cũ
+        if (SessionHelper::isAdmin() && isset($data['Manguoidung'])) {
+            $Manguoidung = $data['Manguoidung']; // Admin có thể đổi người dùng
+        }
         $Thoigiandatlich = $data['Thoigiandatlich'] ?? $datLich->Thoigiandatlich;
         $Trangthai = $datLich->Trangthai_; // Giữ nguyên trạng thái cũ
-        if (SessionHelper::isAdmin() && isset($data['Trangthai'])) {
-             $Trangthai = $data['Trangthai']; // Admin có thể đổi trạng thái
+        if (SessionHelper::isAdmin() && isset($data['Trangthai_'])) {
+             $Trangthai = $data['Trangthai_']; // Admin có thể đổi trạng thái
         }
 
         $result = $this->datLichModel->updateDatLich(
             $id,
+            $Manguoidung,
             $Thoigiandatlich,
             $Trangthai
         );
 
-        if ($result) {
-            echo json_encode(['message' => 'Đặt lịch cập nhật thành công']);
+        if ($result > 0) {
+            echo json_encode(['message' => 'Cập nhật đặt lịch thành công.']);
         } else {
-            http_response_code(400);
-            echo json_encode(['message' => 'Đặt lịch cập nhật thất bại']);
+            http_response_code(404);
+            echo json_encode(['message' => 'Không tìm thấy lịch đặt để cập nhật hoặc dữ liệu không thay đổi.']);
         }
     }
 
