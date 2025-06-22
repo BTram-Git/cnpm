@@ -34,13 +34,14 @@ if ($url[0] === 'api' && isset($url[1])) {
                 $action = $id ? 'show' : 'index';
                 break;
             case 'POST':
-                // Nếu có action đặc biệt ở URL thứ 2 (ví dụ: /api/account/login)
                 $specialAction = $url[2] ?? null;
+                // Ưu tiên các action đặc biệt như login, register
                 if ($specialAction && method_exists($controller, $specialAction)) {
                     $action = $specialAction;
                     $id = null;
                 } else {
-                    $action = 'register';
+                    // Mặc định cho POST là 'store' (tạo mới)
+                    $action = 'store';
                 }
                 break;
             case 'PUT':

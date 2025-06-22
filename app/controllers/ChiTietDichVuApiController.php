@@ -36,35 +36,28 @@ class ChiTietDichVuApiController
         }
     }
 
-    // Thêm chi tiết dịch vụ mới
+    // Đổi tên 'add' thành 'store' để tuân thủ RESTful
     public function store()
     {
         header('Content-Type: application/json');
-        $data = json_decode(file_get_contents("php://input"), true);
+        $data = json_decode(file_get_contents("php://input"));
 
-        if (!is_array($data)) {
+        // Giữ lại kiểm tra dữ liệu đầu vào
+        if (!$data || !isset($data->MaDL) || !isset($data->MaDV)) {
             http_response_code(400);
-            echo json_encode(['error' => 'Dữ liệu không hợp lệ']);
+            echo json_encode(['error' => 'Dữ liệu không hợp lệ. Vui lòng cung cấp MaDL và MaDV.']);
             return;
         }
-
-        $MaDL = $data['MaDL'] ?? '';
-        $MaDV = $data['MaDV'] ?? '';
-
-        if (empty($MaDL) || empty($MaDV)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Vui lòng nhập đầy đủ thông tin']);
-            return;
-        }
-
-        $result = $this->chiTietDichVuModel->addChiTietDichVu($MaDL, $MaDV);
+        
+        // Gọi đến model, giả sử model có phương thức add
+        $result = $this->chiTietDichVuModel->addChiTietDichVu($data->MaDL, $data->MaDV);
 
         if ($result === true) {
-            http_response_code(201);
-            echo json_encode(['message' => 'Thêm chi tiết dịch vụ thành công']);
+            http_response_code(201); // Created
+            echo json_encode(['message' => 'Chi tiết dịch vụ đã được thêm thành công.']);
         } else {
-            http_response_code(400);
-            echo json_encode(['error' => 'Thêm chi tiết dịch vụ thất bại']);
+            http_response_code(500); // Internal Server Error
+            echo json_encode(['error' => 'Lỗi máy chủ khi thêm chi tiết dịch vụ.']);
         }
     }
 
