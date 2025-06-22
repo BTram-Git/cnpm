@@ -43,7 +43,17 @@ class HoaDonVaThanhToanApiController
         
         if ($hoaDon) {
             if (SessionHelper::isAdmin() || (SessionHelper::isLoggedIn() && SessionHelper::getUserId() == $hoaDon->Manguoidung)) {
-                echo json_encode($hoaDon);
+                
+                // Chuyển đổi đối tượng stdClass thành mảng để có thể thêm trường mới
+                $hoaDonData = (array)$hoaDon;
+
+                // Thêm thông báo nếu hóa đơn chưa được thanh toán
+                if (isset($hoaDonData['Tentrangthai']) && $hoaDonData['Tentrangthai'] == 'Chưa thanh toán') {
+                    $hoaDonData['thongbao'] = 'Hóa đơn này chưa được thanh toán. Vui lòng thanh toán để hoàn tất dịch vụ.';
+                }
+
+                echo json_encode($hoaDonData);
+
             } else {
                 http_response_code(403);
                 echo json_encode(['error' => 'Bạn không có quyền xem hóa đơn này.']);
@@ -92,15 +102,12 @@ class HoaDonVaThanhToanApiController
               $MaPT, 
              $Matrangthai)
              ;
-             if (is_array($result)) {
-                http_response_code(400);
-                echo json_encode(['errors' => $result]);
-            } elseif ($result === true) {
+             if ($result === true) {
                 http_response_code(201);
                 echo json_encode(['message' => 'Hóa đơn được thêm thành công']);
             } else {
                 http_response_code(500);
-                echo json_encode(['error' => $result['error'] ?? 'Thêm hóa đơn thất bại']);
+                echo json_encode(['error' => 'Thêm hóa đơn thất bại do lỗi máy chủ.']);
             }
     }
 

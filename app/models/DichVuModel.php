@@ -77,9 +77,10 @@ public function updateDichVu($id, $Tendichvu, $Gia,$MoTa )
     $stmt->bindParam(':Gia', $Gia);
     $stmt->bindParam(':MoTa', $MoTa);
     if ($stmt->execute()) {
-        return true;
+        if ($stmt->rowCount() > 0) {
+            return true;
+        }
     }
-
     return false;
 }
 // Kiểm tra dịch vụ có liên kết với chitietdichvu không
@@ -101,8 +102,12 @@ public function deleteDichVu($MaDV)
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(':MaDV', $MaDV);
     if ($stmt->execute()) {
-        return true;
+        if ($stmt->rowCount() > 0) {
+            return true;
+        } else {
+            return ['error' => 'Dịch vụ không tồn tại hoặc đã được xóa.'];
+        }
     }
-    return false;
+    return ['error' => 'Không thể xóa dịch vụ do lỗi không xác định.'];
 }
 }                                                                                                                                                                                                                                                                                                                                                                                                                        

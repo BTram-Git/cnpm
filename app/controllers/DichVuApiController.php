@@ -71,15 +71,15 @@ class DichVuApiController
             $MoTa
         );
 
-        if (is_array($result)) {
+        if ($result === true) {
+            http_response_code(201);
+            echo json_encode(['message' => 'Thêm dịch vụ thành công']);
+        } elseif (is_array($result)) {
             http_response_code(400);
             echo json_encode(['errors' => $result]);
-        } elseif ($result === true) {
-            http_response_code(201);
-            echo json_encode(['message' => 'Dich vu created successfully']);
         } else {
             http_response_code(500);
-            echo json_encode(['error' => $result['error'] ?? 'Thêm Dich vu thất bại']);
+            echo json_encode(['error' => 'Thêm dịch vụ thất bại do lỗi máy chủ.']);
         }
     }
 
@@ -119,11 +119,11 @@ class DichVuApiController
             $MoTa
         );
 
-        if ($result > 0) {
-            echo json_encode(['message' => 'Cập nhật dịch vụ thành công.']);
+        if ($result) {
+            echo json_encode(['message' => 'Cập nhật dịch vụ thành công']);
         } else {
-            http_response_code(404);
-            echo json_encode(['message' => 'Không tìm thấy dịch vụ để cập nhật hoặc dữ liệu không thay đổi.']);
+            http_response_code(400);
+            echo json_encode(['message' => 'Cập nhật dịch vụ thất bại. Có thể do dịch vụ không tồn tại hoặc dữ liệu không thay đổi.']);
         }
     }
     // Xóa sản phẩm theo ID

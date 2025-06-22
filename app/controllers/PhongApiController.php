@@ -17,6 +17,12 @@ class PhongApiController
     // Lấy danh sách
     public function index()
     {
+        SessionHelper::start();
+        if (!SessionHelper::isAdmin()) {
+            http_response_code(403); // Forbidden
+            echo json_encode(['error' => 'Bạn không có quyền truy cập chức năng này.']);
+            return;
+        }
         header('Content-Type: application/json');
         $phongs = $this->phongModel->getPhongs();
         echo json_encode($phongs);
@@ -32,7 +38,7 @@ class PhongApiController
             echo json_encode($phong);
         } else {
             http_response_code(404);
-            echo json_encode(['message' => 'Dịch vụ không tìm thấy']);
+            echo json_encode(['message' => 'Phòng không tìm thấy']);
         }
     }
 

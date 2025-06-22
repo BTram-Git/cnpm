@@ -80,9 +80,14 @@ public function deleteQuangCao($MaQC)
 {
     $query = "DELETE FROM " . $this->table_name . " WHERE MaQC = :MaQC";
     $stmt = $this->conn->prepare($query);
+    $MaQC = htmlspecialchars(strip_tags($MaQC));
     $stmt->bindParam(':MaQC', $MaQC);
     if ($stmt->execute()) {
-        return true;
+        if ($stmt->rowCount() > 0) {
+            return true;
+        } else {
+            return false; // Hoặc có thể trả về một thông báo lỗi cụ thể
+        }
     }
     return false;
 }

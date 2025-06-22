@@ -74,7 +74,11 @@ public function deletePhuongThuc($MaPT)
         $stmtDelete->bindParam(':MaPT', $MaPT);
 
         if ($stmtDelete->execute()) {
-            return true;
+            if ($stmtDelete->rowCount() > 0) {
+                return true;
+            } else {
+                return ['error' => 'Phương thức thanh toán không tồn tại hoặc đã được xóa.'];
+            }
         }
         
         return ['error' => 'Không thể xóa phương thức thanh toán do lỗi không xác định.'];

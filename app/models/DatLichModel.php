@@ -113,7 +113,11 @@ public function deleteDatLich($MaDL)
         $stmtDelete = $this->conn->prepare($queryDelete);
         $stmtDelete->bindParam(':MaDL', $MaDL);
         if ($stmtDelete->execute()) {
-            return true;
+            if ($stmtDelete->rowCount() > 0) {
+                return true;
+            } else {
+                return ['error' => 'Lịch đặt không tồn tại hoặc đã được xóa.'];
+            }
         }
         return ['error' => 'Không thể xóa lịch đặt do lỗi không xác định.'];
     } catch (PDOException $e) {

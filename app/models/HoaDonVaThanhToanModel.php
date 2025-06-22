@@ -28,7 +28,10 @@ public function getHoaDonByUserId($userId)
 
 public function getHoaDonVaThanhToanById($id) 
 { 
-    $query = "SELECT h.MaHD, h.NgayThanhToan, h.Tongtien, h.MaDL, h.Manguoidung, h.Maphong, h.MaPT, h.Matrangthai FROM " . $this->table_name . " h WHERE h.MaHD = :id";
+    $query = "SELECT h.MaHD, h.NgayThanhToan, h.Tongtien, h.MaDL, h.Manguoidung, h.Maphong, h.MaPT, h.Matrangthai, t.Tentrangthai 
+              FROM " . $this->table_name . " h 
+              JOIN trangthai t ON h.Matrangthai = t.Matrangthai
+              WHERE h.MaHD = :id";
     $stmt = $this->conn->prepare($query); 
     $stmt->bindParam(':id', $id); 
     $stmt->execute(); 

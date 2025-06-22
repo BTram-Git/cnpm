@@ -54,8 +54,10 @@ public function updatePhong($Maphong, $Tenphong, $Loaiphong, $MatrangthaiP)
     $stmt->bindParam(':Tenphong', $Tenphong);
     $stmt->bindParam(':Loaiphong', $Loaiphong);
     $stmt->bindParam(':MatrangthaiP', $MatrangthaiP);
-    $stmt->execute();
-    return $stmt->rowCount();
+    if ($stmt->execute()) {
+        return true;
+    }
+    return false;
 }
 
 public function deletePhong($Maphong)
@@ -94,7 +96,11 @@ public function deletePhong($Maphong)
         $stmtDelete->bindParam(':Maphong', $Maphong);
 
         if ($stmtDelete->execute()) {
-            return true;
+            if ($stmtDelete->rowCount() > 0) {
+                return true;
+            } else {
+                return ['error' => 'Phòng không tồn tại hoặc đã được xóa.'];
+            }
         }
 
         return ['error' => 'Không thể xóa phòng do lỗi không xác định.'];

@@ -2,6 +2,7 @@
 require_once('app/config/database.php');
 
 require_once('app/models/ChiTietDichVuModel.php');
+require_once('app/helpers/SessionHelper.php');
 
 class ChiTietDichVuApiController
 {
@@ -17,16 +18,22 @@ class ChiTietDichVuApiController
     // Lấy danh sách
     public function index()
     {
+        SessionHelper::start();
+        if (!SessionHelper::isAdmin()) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Bạn không có quyền thực hiện hành động này.']);
+            return;
+        }
         header('Content-Type: application/json');
         $chiTietDichVus = $this->chiTietDichVuModel->getChiTietDichVus();
         echo json_encode($chiTietDichVus);
     }
 
-    // Lấy thông tin sản phẩm theo ID
+    // Lấy thông tin chi tiết dịch vụ theo MaDL
     public function show($id)
     {
         header('Content-Type: application/json');
-        $chiTietDichVu = $this->chiTietDichVuModel->getChiTietDichVuById($id);
+        $chiTietDichVu = $this->chiTietDichVuModel->getChiTietDichVuByMaDL($id);
         
         if ($chiTietDichVu) {
             echo json_encode($chiTietDichVu);
@@ -36,60 +43,49 @@ class ChiTietDichVuApiController
         }
     }
 
-    // Đổi tên 'add' thành 'store' để tuân thủ RESTful
+    // Thêm chi tiết dịch vụ
     public function store()
     {
-        header('Content-Type: application/json');
-        $data = json_decode(file_get_contents("php://input"));
+        SessionHelper::start();
+        if (!SessionHelper::isAdmin()) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Bạn không có quyền thực hiện hành động này.']);
+            return;
+        }
 
-        // Giữ lại kiểm tra dữ liệu đầu vào
-        if (!$data || !isset($data->MaDL) || !isset($data->MaDV)) {
+        header('Content-Type: application/json');
+        $data = json_decode(file_get_contents("php://input"), true);
+
+        if (!$data || !isset($data['MaDL']) || !isset($data['MaDV'])) {
             http_response_code(400);
             echo json_encode(['error' => 'Dữ liệu không hợp lệ. Vui lòng cung cấp MaDL và MaDV.']);
             return;
         }
         
-        // Gọi đến model, giả sử model có phương thức add
-        $result = $this->chiTietDichVuModel->addChiTietDichVu($data->MaDL, $data->MaDV);
+        $result = $this->chiTietDichVuModel->addChiTietDichVu($data['MaDL'], $data['MaDV']);
 
         if ($result === true) {
             http_response_code(201); // Created
             echo json_encode(['message' => 'Chi tiết dịch vụ đã được thêm thành công.']);
+        } elseif (is_array($result) && isset($result['error'])) {
+            http_response_code(400); // Bad Request (e.g., foreign key violation)
+            echo json_encode($result);
         } else {
             http_response_code(500); // Internal Server Error
             echo json_encode(['error' => 'Lỗi máy chủ khi thêm chi tiết dịch vụ.']);
         }
     }
 
-    // Cập nhật chi tiết dịch vụ theo MaDL
-    public function update($id)
-    {
-        header('Content-Type: application/json');
-        $data = json_decode(file_get_contents("php://input"));
-
-        if (!$data || !isset($data->MaDV)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Dữ liệu không hợp lệ. Vui lòng cung cấp MaDV.']);
-            return;
-        }
-
-        $rowCount = $this->chiTietDichVuModel->updateChiTietDichVu($id, $data->MaDV);
-
-        if (is_array($rowCount) && isset($rowCount['error'])) {
-            http_response_code(500);
-            echo json_encode($rowCount);
-        } elseif ($rowCount > 0) {
-            http_response_code(200);
-            echo json_encode(['message' => 'Cập nhật chi tiết dịch vụ thành công.']);
-        } else {
-            http_response_code(404);
-            echo json_encode(['message' => 'Không tìm thấy chi tiết dịch vụ để cập nhật hoặc dữ liệu không thay đổi.']);
-        }
-    }
-
     // Xóa sản phẩm theo ID, với MaDL từ URL và MaDV từ Body
     public function destroy($MaDL)
     {
+        SessionHelper::start();
+        if (!SessionHelper::isAdmin()) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Bạn không có quyền thực hiện hành động này.']);
+            return;
+        }
+
         header('Content-Type: application/json');
 
         // Lấy MaDV từ body

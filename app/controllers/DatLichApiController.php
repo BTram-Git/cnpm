@@ -83,8 +83,7 @@ class DatLichApiController
 
         $Manguoidung = SessionHelper::getUserId(); // Lấy ID người dùng từ session
         $Thoigiandatlich = $data['Thoigiandatlich'] ?? date('Y-m-d H:i:s');
-        // Luôn đặt trạng thái mặc định là "Chờ xác nhận" khi tạo mới
-        $Trangthai = 'Chờ xác nhận';
+        $Trangthai = $data['Trangthai_'] ?? 'Chờ xác nhận';
     
         $result = $this->datLichModel->addDatLich(
             $Manguoidung,
@@ -95,9 +94,12 @@ class DatLichApiController
         if ($result === true) {
             http_response_code(201);
             echo json_encode(['message' => 'Đặt lịch thành công']);
-        } else {
+        } elseif (is_array($result)) {
             http_response_code(400);
-            echo json_encode(['error' => $result['error'] ?? 'Đặt lịch thất bại']);
+            echo json_encode(['errors' => $result]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Đặt lịch thất bại do lỗi máy chủ.']);
         }
     }
 
@@ -130,25 +132,15 @@ class DatLichApiController
             return;
         }
 
-        // Logic cập nhật trạng thái mới
-        $Thoigiandatlich = $data['Thoigiandatlich'] ?? $datLich->Thoigiandatlich;
-        $Trangthai = $datLich->Trangthai_; // Mặc định giữ nguyên trạng thái cũ
-
-        if (SessionHelper::isAdmin()) {
-            // Admin có toàn quyền thay đổi trạng thái
-            if (isset($data['Trangthai_'])) {
-                $Trangthai = $data['Trangthai_'];
-            }
-        } else {
-            // User chỉ có thể tự hủy lịch của mình khi đang ở trạng thái 'Chờ xác nhận'
-            if (isset($data['Trangthai_']) && $data['Trangthai_'] === 'Đã hủy' && $datLich->Trangthai_ === 'Chờ xác nhận') {
-                $Trangthai = 'Đã hủy';
-            }
-        }
-        
-        $Manguoidung = $datLich->Manguoidung; // User không thể đổi chủ lịch đặt
+        // Admin có thể cập nhật cả trạng thái và người dùng, user thì không
+        $Manguoidung = $datLich->Manguoidung; // Giữ nguyên người dùng cũ
         if (SessionHelper::isAdmin() && isset($data['Manguoidung'])) {
-            $Manguoidung = $data['Manguoidung']; // Admin có thể đổi
+            $Manguoidung = $data['Manguoidung']; // Admin có thể đổi người dùng
+        }
+        $Thoigiandatlich = $data['Thoigiandatlich'] ?? $datLich->Thoigiandatlich;
+        $Trangthai = $datLich->Trangthai_; // Giữ nguyên trạng thái cũ
+        if (SessionHelper::isAdmin() && isset($data['Trangthai_'])) {
+             $Trangthai = $data['Trangthai_']; // Admin có thể đổi trạng thái
         }
 
         $result = $this->datLichModel->updateDatLich(
